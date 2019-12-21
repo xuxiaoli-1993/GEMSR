@@ -48,9 +48,6 @@ contains
             qvr = cr % qv
             vecn = current_face % vecn
 
-! 	    if(i==2502) then
-! 	      print*, 'this is a boundary face'
-! 	    end if
             !linear interpolation
             !
             if (abs(s_ialg) >= 1) then
@@ -77,12 +74,6 @@ contains
                 call hlle_flux(current_face, cl, cr, qvl, qvr, faceflux, aav, tl, tr, ajl, ajr)
             case(2)
                 call hllc_flux(current_face, cl, cr, qvl, qvr, faceflux, aav, tl, tr, ajl, ajr)
-                !if(i==1000)then
-                !print *,faceflux%v   !ajr%e(ico,ico),'r'
-                !    call roe_flux(current_face,cl,cr,qvl,qvr,faceflux,aav,tl,tr,ajl,ajr)
-                !print *,'****'
-                !print *,faceflux%v    !ajr%e(ico,ico)
-                !end if
             case(4)
                 call rusanov_flux(current_face, cl, cr, qvl, qvr, faceflux, aav, tl, tr, ajl, ajr)
             case(6)
