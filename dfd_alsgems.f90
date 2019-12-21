@@ -60,9 +60,6 @@ MODULE dfd_constant
    integer, parameter :: iee = ieb + 2   ! the end number of E equ.
    integer, parameter :: ifb = iee + 1   ! the number of Fi equ.
    integer, parameter :: ife = ifb + 1   ! the number of Fi equ.
-
-  !interface capture
-   integer, parameter :: usels = 1
 !   
    integer, parameter :: inlet_type = 1  !inflow or outflow
    integer, parameter :: outlet_type  = 2
