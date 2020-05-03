@@ -1,0 +1,162 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+10	pgrid.f90	/^         10    ARR(i+1)=a$/;"	l	subroutine:sort_array	file:
+10	pgrid.f90	/^         10  read(2,*)$/;"	l	subroutine:gambit2dfd	file:
+10	pgrid.f90	/^      10 continue$/;"	l	subroutine:fieldview2dfd	file:
+10	pgrid.f90	/^   10 format(10I8)$/;"	l	program:pgrid	file:
+20	pgrid.f90	/^      20 INCR = INCR \/ 3$/;"	l	subroutine:sort	file:
+20	pgrid.f90	/^      20 INCR = INCR \/ 3$/;"	l	subroutine:sort_face	file:
+20	pgrid.f90	/^   20  format(5e20.8)$/;"	l	program:pgrid	file:
+30	pgrid.f90	/^      30 IF (I .GT. N) GOTO 60$/;"	l	subroutine:sort	file:
+30	pgrid.f90	/^      30 IF (I .GT. N) GOTO 60$/;"	l	subroutine:sort_face	file:
+40	pgrid.f90	/^      40 IF (X(J - INCR) .LT. TEMP) GOTO 50$/;"	l	subroutine:sort	file:
+40	pgrid.f90	/^      40 do k = 1, ndim$/;"	l	subroutine:sort_face	file:
+50	pgrid.f90	/^      50 X(J) = TEMP$/;"	l	subroutine:sort	file:
+50	pgrid.f90	/^      50 faces(J) = fswep$/;"	l	subroutine:sort_face	file:
+60	pgrid.f90	/^      60 IF (INCR .GT. 1) GOTO 20$/;"	l	subroutine:sort	file:
+60	pgrid.f90	/^      60 IF (INCR .GT. 1) GOTO 20$/;"	l	subroutine:sort_face	file:
+Geom_Partijk	pgrid.f90	/^   subroutine Geom_Partijk(/;"	s	program:pgrid
+Geom_Partxyz	pgrid.f90	/^   subroutine Geom_Partxyz(/;"	s	program:pgrid
+adj	pgrid.f90	/^   integer,allocatable::epart(:),npart(:),adj(/;"	v	program:pgrid
+append_array	pgrid.f90	/^   subroutine append_array(/;"	s	program:pgrid
+arg1	pgrid.f90	/^   character(len=80)::arg1,/;"	v	program:pgrid
+arg2	pgrid.f90	/^   character(len=80)::arg1, arg2,/;"	v	program:pgrid
+arg3	pgrid.f90	/^   character(len=80)::arg1, arg2, arg3$/;"	v	program:pgrid
+boundary_info	pgrid.f90	/^   subroutine boundary_info(/;"	s	program:pgrid
+c2c	pgrid.f90	/^      integer::c2c(/;"	k	type:cell
+c2n	pgrid.f90	/^      integer,pointer::c2n(/;"	k	type:cell
+c2n	pgrid.f90	/^   integer::istatus,nc,f2n(50),c2n(/;"	v	program:pgrid
+c2n_2_n2n	pgrid.f90	/^   subroutine c2n_2_n2n(/;"	s	program:pgrid
+cell	pgrid.f90	/^   type cell$/;"	t	program:pgrid
+cell2face	pgrid.f90	/^   subroutine cell2face(/;"	s	program:pgrid
+cells	pgrid.f90	/^   type(cell),pointer::cells(/;"	v	program:pgrid
+cf	pgrid.f90	/^   type(face),pointer::faces(:),new_faces(:),cf$/;"	v	program:pgrid
+check_parts	pgrid.f90	/^   subroutine check_parts$/;"	s	program:pgrid
+cl	pgrid.f90	/^      integer,pointer::cl(/;"	k	type:itf
+collection_period	pgrid.f90	/^   subroutine collection_period$/;"	s	program:pgrid
+correction_periodic_bc	pgrid.f90	/^   subroutine correction_periodic_bc$/;"	s	program:pgrid
+countcells	pgrid.f90	/^   subroutine countcells(/;"	s	program:pgrid
+edgecut	pgrid.f90	/^   integer :: i,j,k,l,fb,im,edgecut,/;"	v	program:pgrid
+epart	pgrid.f90	/^   integer,allocatable::epart(/;"	v	program:pgrid
+epartX	pgrid.f90	/^   integer,allocatable::epartX(/;"	v	program:pgrid
+epartY	pgrid.f90	/^   integer,allocatable::epartX(:),epartY(/;"	v	program:pgrid
+epartZ	pgrid.f90	/^   integer,allocatable::epartX(:),epartY(:),epartZ(/;"	v	program:pgrid
+esize	pgrid.f90	/^   integer,allocatable::epart(:),npart(:),adj(:),n2n(:),esize(/;"	v	program:pgrid
+f234	pgrid.f90	/^   integer::iftm,ijk(3),nijk(3),ni,nj,nk,f234(/;"	v	program:pgrid
+f2n	pgrid.f90	/^      integer,pointer::f2n(/;"	k	type:face
+f2n	pgrid.f90	/^   integer::istatus,nc,f2n(/;"	v	program:pgrid
+fac	pgrid.f90	/^   real(rfp),allocatable::xl(:),fac(/;"	v	program:pgrid
+face	pgrid.f90	/^   type face$/;"	t	program:pgrid
+face_2_c2c	pgrid.f90	/^   subroutine face_2_c2c(/;"	s	program:pgrid
+faces	pgrid.f90	/^   type(face),pointer::faces(/;"	v	program:pgrid
+fb	pgrid.f90	/^   integer :: i,j,k,l,fb,/;"	v	program:pgrid
+fieldview2dfd	pgrid.f90	/^   subroutine fieldview2dfd$/;"	s	program:pgrid
+findindex	pgrid.f90	/^   integer function findindex(/;"	f	program:pgrid
+fn234	pgrid.f90	/^   integer::iftm,ijk(3),nijk(3),ni,nj,nk,f234(3),fn234(/;"	v	program:pgrid
+fswap	pgrid.f90	/^   type(face)::fswap$/;"	v	program:pgrid
+gambit2dfd	pgrid.f90	/^   subroutine gambit2dfd$/;"	s	program:pgrid
+gambit2dfd_face	pgrid.f90	/^   subroutine gambit2dfd_face$/;"	s	program:pgrid
+gridfile	pgrid.f90	/^   character(len=80)::gridfile,/;"	v	program:pgrid
+i	pgrid.f90	/^   in/;"	v	program:pgrid
+i2s	pgrid.f90	/^   function i2s(/;"	f	program:pgrid
+ibc	pgrid.f90	/^   integer,allocatable::in(:,:,:),ic(:,:,:),ibc(/;"	v	program:pgrid
+ic	pgrid.f90	/^   integer,allocatable::in(:,:,:),ic(/;"	v	program:pgrid
+idum	pgrid.f90	/^   integer::iftm,ijk(3),nijk(3),ni,nj,nk,f234(3),fn234(3),max_c2c,nedge,idum$/;"	v	program:pgrid
+iftm	pgrid.f90	/^   integer::iftm,/;"	v	program:pgrid
+ijk	pgrid.f90	/^   integer::iftm,ijk(/;"	v	program:pgrid
+il	pgrid.f90	/^      integer::il,/;"	k	type:face
+im	pgrid.f90	/^   integer :: i,j,k,l,fb,im,/;"	v	program:pgrid
+in	pgrid.f90	/^   int/;"	v	program:pgrid
+ind	pgrid.f90	/^   integer,allocatable::epart(:),npart(:),adj(:),n2n(:),esize(:),ind(/;"	v	program:pgrid
+init_array	pgrid.f90	/^   subroutine init_array(/;"	s	program:pgrid
+intf	pgrid.f90	/^   integer ::nparts,nct,ntf,nn,nf,ipl,ipr,ndim,nsend,nrecv,intf$/;"	v	program:pgrid
+ip	pgrid.f90	/^      integer::nw,ip,/;"	k	type:cell
+ipl	pgrid.f90	/^   integer ::nparts,nct,ntf,nn,nf,ipl,/;"	v	program:pgrid
+ipr	pgrid.f90	/^   integer ::nparts,nct,ntf,nn,nf,ipl,ipr,/;"	v	program:pgrid
+ir	pgrid.f90	/^      integer::il,ir /;"	k	type:face
+ishere	pgrid.f90	/^   integer function ishere(/;"	f	program:pgrid
+issame	pgrid.f90	/^   integer function issame(/;"	f	program:pgrid
+istatus	pgrid.f90	/^   integer::istatus,/;"	v	program:pgrid
+itf	pgrid.f90	/^   type itf$/;"	t	program:pgrid
+itype	pgrid.f90	/^      integer::nw,ip,itype$/;"	k	type:cell
+itype	pgrid.f90	/^   integer::istatus,nc,f2n(50),c2n(50),nnodes,ncells,nfaces,itype$/;"	v	program:pgrid
+j	pgrid.f90	/^   integer :: i,j,/;"	v	program:pgrid
+k	pgrid.f90	/^   integer :: i,j,k,/;"	v	program:pgrid
+k1	pgrid.f90	/^   integer :: i,j,k,l,fb,im,edgecut,k1,/;"	v	program:pgrid
+k2	pgrid.f90	/^   integer :: i,j,k,l,fb,im,edgecut,k1,k2,/;"	v	program:pgrid
+k3	pgrid.f90	/^   integer :: i,j,k,l,fb,im,edgecut,k1,k2,k3,/;"	v	program:pgrid
+key	pgrid.f90	/^      integer::key(/;"	k	type:face
+l	pgrid.f90	/^   integer :: i,j,k,l,/;"	v	program:pgrid
+lab_period	pgrid.f90	/^   integer :: i,j,k,l,fb,im,edgecut,k1,k2,k3,nbsets,nperiod,lab_period,/;"	v	program:pgrid
+line	pgrid.f90	/^   character(len=80)::gridfile,newfile,line$/;"	v	program:pgrid
+lookup_key	pgrid.f90	/^   subroutine lookup_key(/;"	s	program:pgrid
+m	pgrid.f90	/^      integer::n,m$/;"	k	type:itf
+map2face	pgrid.f90	/^   subroutine map2face(/;"	s	program:pgrid
+max_c2c	pgrid.f90	/^   integer::iftm,ijk(3),nijk(3),ni,nj,nk,f234(3),fn234(3),max_c2c,/;"	v	program:pgrid
+myinterface	pgrid.f90	/^   type(itf),pointer::myinterface(/;"	v	program:pgrid
+n	pgrid.f90	/^      int/;"	k	type:itf
+n2key	pgrid.f90	/^   function n2key(/;"	f	program:pgrid
+n2n	pgrid.f90	/^   integer,allocatable::epart(:),npart(:),adj(:),n2n(/;"	v	program:pgrid
+nbsets	pgrid.f90	/^   integer :: i,j,k,l,fb,im,edgecut,k1,k2,k3,nbsets,/;"	v	program:pgrid
+nc	pgrid.f90	/^   integer::istatus,nc,/;"	v	program:pgrid
+ncells	pgrid.f90	/^   integer::istatus,nc,f2n(50),c2n(50),nnodes,ncells,/;"	v	program:pgrid
+nct	pgrid.f90	/^   integer ::nparts,nct,/;"	v	program:pgrid
+ndim	pgrid.f90	/^   integer ::nparts,nct,ntf,nn,nf,ipl,ipr,ndim,/;"	v	program:pgrid
+neal2dli	pgrid.f90	/^   function neal2dli(/;"	f	program:pgrid
+nedge	pgrid.f90	/^   integer::iftm,ijk(3),nijk(3),ni,nj,nk,f234(3),fn234(3),max_c2c,nedge,/;"	v	program:pgrid
+new_faces	pgrid.f90	/^   type(face),pointer::faces(:),new_faces(/;"	v	program:pgrid
+newfile	pgrid.f90	/^   character(len=80)::gridfile,newfile,/;"	v	program:pgrid
+nf	pgrid.f90	/^   integer ::nparts,nct,ntf,nn,nf,/;"	v	program:pgrid
+nface_of_cell	pgrid.f90	/^   function nface_of_cell(/;"	f	program:pgrid
+nfaces	pgrid.f90	/^   integer::istatus,nc,f2n(50),c2n(50),nnodes,ncells,nfaces,/;"	v	program:pgrid
+ni	pgrid.f90	/^   integer::iftm,ijk(3),nij/;"	v	program:pgrid
+nijk	pgrid.f90	/^   integer::iftm,ijk(3),nijk(/;"	v	program:pgrid
+nj	pgrid.f90	/^   integer::iftm,ijk(3),nijk(3),ni,nj,/;"	v	program:pgrid
+nk	pgrid.f90	/^   integer::iftm,ijk(3),nijk(3),ni,nj,nk,/;"	v	program:pgrid
+nn	pgrid.f90	/^   integer ::nparts,nct,ntf,nn,/;"	v	program:pgrid
+nnodes	pgrid.f90	/^   integer::istatus,nc,f2n(50),c2n(50),nnodes,/;"	v	program:pgrid
+node	pgrid.f90	/^   type node$/;"	t	program:pgrid
+nodes	pgrid.f90	/^   type(node),pointer::nodes(/;"	v	program:pgrid
+npart	pgrid.f90	/^   integer,allocatable::epart(:),npart(/;"	v	program:pgrid
+npartX	pgrid.f90	/^   integer,allocatable::epartX(:),epartY(:),epartZ(:),npartX(/;"	v	program:pgrid
+npartY	pgrid.f90	/^   integer,allocatable::epartX(:),epartY(:),epartZ(:),npartX(:),npartY(/;"	v	program:pgrid
+npartZ	pgrid.f90	/^   integer,allocatable::epartX(:),epartY(:),epartZ(:),npartX(:),npartY(:),npartZ(/;"	v	program:pgrid
+nparts	pgrid.f90	/^   integer ::nparts,/;"	v	program:pgrid
+npartsX	pgrid.f90	/^   integer ::npartsX,/;"	v	program:pgrid
+npartsY	pgrid.f90	/^   integer ::npartsX,npartsY,/;"	v	program:pgrid
+npartsZ	pgrid.f90	/^   integer ::npartsX,npartsY,npartsZ$/;"	v	program:pgrid
+nperiod	pgrid.f90	/^   integer :: i,j,k,l,fb,im,edgecut,k1,k2,k3,nbsets,nperiod,/;"	v	program:pgrid
+nperiod_p	pgrid.f90	/^   integer :: i,j,k,l,fb,im,edgecut,k1,k2,k3,nbsets,nperiod,lab_period,nperiod_p$/;"	v	program:pgrid
+nrecv	pgrid.f90	/^   integer ::nparts,nct,ntf,nn,nf,ipl,ipr,ndim,nsend,nrecv,/;"	v	program:pgrid
+nsend	pgrid.f90	/^   integer ::nparts,nct,ntf,nn,nf,ipl,ipr,ndim,nsend,/;"	v	program:pgrid
+ntf	pgrid.f90	/^   integer ::nparts,nct,ntf,/;"	v	program:pgrid
+nvc	pgrid.f90	/^   integer ::nvc,/;"	v	program:pgrid
+nw	pgrid.f90	/^      integer::nw$/;"	k	type:face
+nw	pgrid.f90	/^      integer::nw$/;"	k	type:node
+nw	pgrid.f90	/^      integer::nw,/;"	k	type:cell
+periodic_face	pgrid.f90	/^   type(itf),pointer::myinterface(:,:),periodic_face(/;"	v	program:pgrid
+pgrid	pgrid.f90	/^program pgrid$/;"	p
+rc_zc	pgrid.f90	/^   subroutine rc_zc(/;"	s	program:pgrid
+read_gambit_boundary	pgrid.f90	/^   subroutine read_gambit_boundary$/;"	s	program:pgrid
+rfp	pgrid.f90	/^   integer, parameter :: rfp /;"	v	program:pgrid
+setup_interface	pgrid.f90	/^   subroutine setup_interface$/;"	s	program:pgrid
+setup_periodic_interface	pgrid.f90	/^   subroutine setup_periodic_interface$/;"	s	program:pgrid
+sort	pgrid.f90	/^   subroutine sort(/;"	s	program:pgrid
+sort_array	pgrid.f90	/^   subroutine sort_array(/;"	s	program:pgrid
+sort_face	pgrid.f90	/^   subroutine sort_face$/;"	s	program:pgrid
+tdum	pgrid.f90	/^   real(rfp)::tdum,/;"	v	program:pgrid
+treament_periodic_bc	pgrid.f90	/^   subroutine treament_periodic_bc$/;"	s	program:pgrid
+vc	pgrid.f90	/^   integer ::nvc,/;"	v	program:pgrid
+vepart	pgrid.f90	/^   integer,allocatable::in(:,:,:),ic(:,:,:),ibc(:,:,:),vepart(/;"	v	program:pgrid
+vface_2_c2c	pgrid.f90	/^   subroutine vface_2_c2c(/;"	s	program:pgrid
+vncells	pgrid.f90	/^   integer ::nvc,vc(50),vnparts(0:50),vncells$/;"	v	program:pgrid
+vnparts	pgrid.f90	/^   integer ::nvc,vc(50),vnparts(/;"	v	program:pgrid
+x	pgrid.f90	/^   real(rfp)::tdum,x,/;"	v	program:pgrid
+xl	pgrid.f90	/^   real(rfp),allocatable::xl(/;"	v	program:pgrid
+xyz	pgrid.f90	/^      real(kind=rfp),pointer::xyz(/;"	k	type:node
+y	pgrid.f90	/^   real(rfp)::tdum,x,y,/;"	v	program:pgrid
+z	pgrid.f90	/^   real(rfp)::tdum,x,y,z$/;"	v	program:pgrid
