@@ -1,7 +1,6 @@
 program pgrid
    implicit none
-   integer, parameter :: rfp  = selected_real_kind(8)
-
+   integer, parameter :: rfp  = selected_real_kind(8)  ! resolution of floating point
    type node
       real(kind=rfp),pointer::xyz(:)   ! coordination
       !   integer,pointer::n2n(:)
@@ -39,6 +38,7 @@ program pgrid
    integer ::nparts,nct,ntf,nn,nf,ipl,ipr,ndim,nsend,nrecv,intf
    integer ::nvc,vc(50),vnparts(0:50),vncells
    integer,allocatable::epart(:),npart(:),adj(:),n2n(:),esize(:),ind(:)
+
    ! Xuxiao
    ! for division in all X, Y, and Z direction 
    integer ::npartsX,npartsY,npartsZ
@@ -51,10 +51,7 @@ program pgrid
    character(len=80)::arg1, arg2, arg3
 
 
-   !print *,'input grid file'
-   gridfile = "fake_gambit.dat"
-   !read(*,'(a)')gridfile
-   print *, 'input file name is ',gridfile
+   print *,'input grid file'
    print *,'input file format'
    print *,' 0 = Uniform'
    print *,' 1 = Structure'
@@ -64,12 +61,19 @@ program pgrid
    print *,' 4 = CFDRC Mixed format'
    print *,' 5 = GAMBIT neutral file format'
    print *,' 6 = FIELDVIEW unstructured format(3D only***)'
+   print *,' 7 = su2 format, created from GMSH'
    print *,'***  if you choose 2D for FV format, I will try to give you z= 0 surface grid'
+   ! gridfile = "su3D"
+   gridfile = "sumesh"
+   !read(*,'(a)')gridfile
 
-   iftm = 5
+   print *, 'input file name is ',gridfile
+
+   iftm = 7
    print *, 'input file format is ',iftm
    !read(*,*)iftm
-   !print *,'input the dimension of problem (1=1D,2=2D,3=3D):'
+
+   print *,'input the dimension of problem (1=1D,2=2D,3=3D):'
    ndim = 2
    !read(*,*)ndim
    print *, 'input dimension is ',ndim
@@ -332,6 +336,8 @@ program pgrid
       call gambit2dfd
    case(6)
       call fieldview2dfd
+   case(7)
+      call su2dfd
    end select
    ! 
    print *,'nnodes =',nnodes
@@ -376,23 +382,23 @@ program pgrid
       do j = 1, ncells
          l = size(cells(j)%c2n)
          c2n(:l) = cells(j)%c2n
-         select case(k)
-         case(0)
-            if(l == 3)  c2n(4) = c2n(3)
-            l = 4
-         case(1)
-            if(l == 4) then
-               c2n(4) = c2n(3)
-               c2n(5:8) = c2n(4)
-            else if(l == 5) then
-               c2n(5:8) = c2n(5)
-            else if(l == 6) then
-               c2n(8) = c2n(6)
-               c2n(5:7) = c2n(4:6)
-               c2n(4) = c2n(3)
-            end if
-            l = 8
-         end select
+         ! select case(k)
+         ! case(0)
+         !    if(l == 3)  c2n(4) = c2n(3)
+         !    l = 4
+         ! case(1)
+         !    if(l == 4) then
+         !       c2n(4) = c2n(3)
+         !       c2n(5:8) = c2n(4)
+         !    else if(l == 5) then
+         !       c2n(5:8) = c2n(5)
+         !    else if(l == 6) then
+         !       c2n(8) = c2n(6)
+         !       c2n(5:7) = c2n(4:6)
+         !       c2n(4) = c2n(3)
+         !    end if
+         !    l = 8
+         ! end select
          write(12,10)c2n(:l)
       end do
       close(12)
@@ -672,8 +678,8 @@ program pgrid
          faces(i)%ir = -ind(faces(i)%ir)   ! convert bounary condition
       end do
       deallocate(ind)
-   case(5)   ! Gambit
-      call gambit2dfd_face
+   case(5, 7)   ! Gambit
+      call fe2dfd_face
    end select
    !
    ! do swap
@@ -688,6 +694,7 @@ program pgrid
       end if
    end do
    if(iftm == 5) call read_gambit_boundary
+   if(iftm == 7) call read_su_boundary
    print *,'number of boundary faces=',fb
    !
    nperiod = 0
@@ -859,7 +866,7 @@ program pgrid
          else if(nparts == 2) then
             npartsX = 2; npartsY = 1; npartsZ = 1
          else if(nparts == 4) then
-            npartsX = 2; npartsY = 2; npartsZ = 1
+            npartsX = 1; npartsY = 1; npartsZ = 4
          else if(nparts == 8) then
             npartsX = 2; npartsY = 2; npartsZ = 2
          else if(nparts == 16) then
@@ -1758,10 +1765,67 @@ contains
       end select
    end function i2s
 
+   subroutine su2dfd
+      integer::nd
+      integer,pointer::cl_grp(:)
+      character(len=50)::str
+
+      ! dimension
+      read(2,*) str, nd
+      if(nd /= ndim) then
+         print *, 'SU mesh dimension is inconsistent with specified dimension'
+         stop
+      end if
+
+      ! connectivity
+      read(2,*) str, ncells
+      allocate(cells(ncells))
+      do i = 1, ncells
+         read(2,*) l, c2n(:get_suNodeNumber(l)), k
+         nc = get_suNodeNumber(l)  ! number of nodes per cell
+         c2n(:nc) = c2n(:nc) + 1  ! su2 mesh number nodes from 0
+         allocate(cells(i) % c2n(nc))
+         cells(i) % c2n = c2n(:nc)
+         nfaces = nfaces + Nface_of_cell(nc, ndim)
+      end do
+
+      ! nodal coordinates
+      read(2,*) str, nnodes
+      allocate(nodes(nnodes))
+      do i = 1, nnodes
+         allocate(nodes(i) % xyz(ndim))
+         read(2,*) nodes(i) % xyz, l
+      end do
+   end subroutine su2dfd
+
+   function get_suNodeNumber(id) result(n)
+      implicit none
+      integer :: id, n
+
+      select case(id)
+      case(3)
+         n = 2  ! Line
+      case(5)
+         n = 3  ! Triangle
+      case(9)
+         n = 4  ! Quadrilateral
+      case(10)
+         n = 4  ! Tetrahedral
+      case(12)
+         n = 8  ! Hexahedral
+      case(13)
+         n = 6  ! Prism
+      case(14)
+         n = 5  ! Pyramid
+      end select
+   end function get_suNodeNumber
+
    subroutine gambit2dfd
       integer::ngrps,ndfcd,ndfvl,nelgp,iskip
       integer,pointer::cl_grp(:)
-
+      do i = 1, 4
+         read(2,*)
+      end do
       !Problem size section
       read(2,*)
       read(2,*)
@@ -1773,16 +1837,15 @@ contains
       if(istatus /= 0 ) print *, 'error in allocate cells and faces'
       do i = 1, nnodes
          allocate(nodes(i)%xyz(ndim))
-         read(2,*) nodes(i)%xyz, l
+         read(2,*)l,nodes(i)%xyz
       end do
       read(2,*)   ! end section
       !Element/Cell Connectivity  
       read(2,*)
       nfaces = 0
       do i = 1, ncells  
-         read(2,*) l, c2n(:l-2), k
-         nc = l-2
-         c2n(:nc) = c2n(:nc) + 1
+         read(2,*)l,k,nc,c2n(:nc)
+         c2n(:nc) = c2n(:nc)   
          allocate(cells(i)%c2n(nc))
          cells(i)%c2n = c2n(:nc)
          if(nc == 8) then  ! Brick --- stupid connectivity
@@ -1796,25 +1859,24 @@ contains
          end if
          nfaces = nfaces + Nface_of_cell(nc,ndim)
       end do
-
-      ! read(2,*)   ! skip head lines
-      ! ! Groups
-      ! do i = 1, ngrps
-      !    read(2,*)
-      !    read(2,'(28x,I10)')nelgp
-      !    allocate(cl_grp(nelgp))
-      !    read(2,*,err=10)itype
-      !    10  read(2,*)
-      !    read(2,*)(cl_grp(k),k = 1, nelgp) ! skip
-      !    print *,'volume type=',itype
-      !    cells(cl_grp)%itype = itype
-      !    read(2,*)
-      !    deallocate(cl_grp)
-      ! end do
+      read(2,*)   ! skip head lines
+      ! Groups
+      do i = 1, ngrps
+         read(2,*)
+         read(2,'(28x,I10)')nelgp
+         allocate(cl_grp(nelgp))
+         read(2,*,err=10)itype
+         10  read(2,*)
+         read(2,*)(cl_grp(k),k = 1, nelgp) ! skip
+         print *,'volume type=',itype
+         cells(cl_grp)%itype = itype
+         read(2,*)
+         deallocate(cl_grp)
+      end do
 
    end subroutine gambit2dfd
 
-   subroutine gambit2dfd_face
+   subroutine fe2dfd_face
 
       allocate(faces(nfaces))
 
@@ -1828,8 +1890,7 @@ contains
 
       call sort_face
 
-   end subroutine gambit2dfd_face
-
+   end subroutine fe2dfd_face
 
    subroutine cell2face(c2n,k,ic)
       integer,intent(in)::c2n(:),ic
@@ -1975,10 +2036,8 @@ contains
       !
    end subroutine sort_face
    !
-
    subroutine read_gambit_boundary
       integer::itype,ic,nelem,nv,it,iface,iskip,nt
-      integer::ff2n(10)
       nt = 0
       do i = 1, nbsets
          read(2,*)
@@ -1991,92 +2050,145 @@ contains
          !
          print *,fb,nt
          do j = 1, nelem
-            ! read(2,*)ic,it,iface
-            read(2, *) l, ff2n(:l-1)
-            ! call map2face(ic,it,iface,itype)
-            ff2n(:l-1) = ff2n(:l-1) + 1
-            call map2face(ff2n, itype)
+            read(2,*)ic,it,iface
+            call map2face_gambit(ic,it,iface,itype)
          end do
          read(2,*)
       end do
       if(fb /= nt) print *,'error, your boundary conditions are not set correctly'
-      close(2)
-      ! 
-      ! 
+      ! close(2)
    end subroutine read_gambit_boundary
 
-   ! subroutine map2face(ic,it,iface,itype)
-   subroutine map2face(f2n,itype)
+   subroutine read_su_boundary
+      character(len=50)::str
+      integer::itype,nelem,it,iface,nt,nbounds
+      integer::ff2n(10)
+
+      read(2,*) str, nbounds
+      nt = 0
+      do i = 1, nbounds
+         read(2,*)  ! label of the boundary
+         read(2,*) str, nelem  ! number of cells at boundary
+         nt = nt + nelem
+         !
+         print *,fb,nt
+         itype = i  ! itype = the ith boundary
+         do j = 1, nelem
+            read(2, *) l, ff2n(:get_suNodeNumber(l))
+            it = get_suNodeNumber(l) ! number of nodes at face
+            ff2n(:it) = ff2n(:it) + 1  ! su2 mesh index from 0
+            call map2face_su(ff2n, it, itype)
+         end do
+      end do
+      if(fb /= nt) print *,'error, your boundary conditions are not set correctly'
+      ! close(2)
+   end subroutine read_su_boundary
+
+   subroutine map2face_su(f2n,it,itype)
       integer::itype,ic,it,iface,n,nc,j
       integer::f2n(10),key(3),jb,je
       logical::check
-      n = 2
-      ! select case(it)
-      ! case(2:3)  ! triangle and Quad
-      !    n = 2
-      !    nc = size(cells(ic)%c2n)
-      !    if(iface == nc) then
-      !       f2n(1) = cells(ic)%c2n(nc)
-      !       f2n(2) = cells(ic)%c2n(1)   
-      !    else
-      !       f2n(1:2) = cells(ic)%c2n(iface:iface+1)
-      !    end if
-      ! case(4)  ! Brick
-      !    n = 4
-      !    if(iface == 1) then
-      !       f2n(1:4) = cells(ic)%c2n((/1,2,5,6/))
-      !    else if(iface == 2) then
-      !       f2n(1:4) = cells(ic)%c2n((/2,3,7,6/))
-      !    else if(iface == 3) then
-      !       f2n(1:4) = cells(ic)%c2n((/3,4,8,7/))
-      !    else if(iface == 4) then
-      !       f2n(1:4) = cells(ic)%c2n((/4,1,5,8/))
-      !    else if(iface == 5) then
-      !       f2n(1:4) = cells(ic)%c2n((/2,1,4,3/))
-      !    else if(iface == 6) then
-      !       f2n(1:4) = cells(ic)%c2n((/5,6,7,8/))
-      !    end if
-      ! case(5)  ! Prisam
-      !    n = 4
-      !    if(iface == 1) then
-      !       f2n(1:4) = cells(ic)%c2n((/1,2,5,4/))
-      !    else if(iface == 2) then
-      !       f2n(1:4) = cells(ic)%c2n((/2,3,6,5/))
-      !    else if(iface == 3) then
-      !       f2n(1:4) = cells(ic)%c2n((/3,1,4,6/))
-      !    else if(iface == 4) then
-      !       n = 3
-      !       f2n(1:3) = cells(ic)%c2n((/1,2,3/))
-      !    else if(iface == 5) then
-      !       n = 3
-      !       f2n(1:3) = cells(ic)%c2n((/4,5,6/))
-      !    end if
-      ! case(6)  ! Tet
-      !    n = 3
-      !    if(iface == 1) then
-      !       f2n(1:n) = cells(ic)%c2n((/1,2,3/))
-      !    else if(iface == 2) then
-      !       f2n(1:n) = cells(ic)%c2n((/1,2,4/))
-      !    else if(iface == 3) then
-      !       f2n(1:n) = cells(ic)%c2n((/2,3,4/))
-      !    else if(iface == 4) then
-      !       f2n(1:n) = cells(ic)%c2n((/4,3,1/))
-      !    end if
-      ! case(7)  ! Pyramid
-      !    n = 3
-      !    if(iface == 1) then
-      !       n = 4
-      !       f2n(1:n) = cells(ic)%c2n((/1,2,3,4/))
-      !    else if(iface == 2) then
-      !       f2n(1:n) = cells(ic)%c2n((/1,2,5/))
-      !    else if(iface == 3) then
-      !       f2n(1:n) = cells(ic)%c2n((/2,3,5/))
-      !    else if(iface == 4) then
-      !       f2n(1:n) = cells(ic)%c2n((/3,4,5/))
-      !    else if(iface == 5) then
-      !       f2n(1:n) = cells(ic)%c2n((/4,1,5/))
-      !    end if     
-      ! end select
+
+      n = it  ! number of nodes per element at boundary
+      key(:ndim) = n2key(f2n(:n))
+
+      jb = 0
+      je = fb + 1
+      out_loop: do  
+         j = (jb + je)  / 2
+         do k = 1, ndim
+            if(key(k) < faces(j)%key(k))  then
+               if(je - jb == 1) then
+                  print *,'could not find the boundary face',ic,key,itype
+                  exit out_loop
+               end if
+               je = j
+               cycle out_loop
+            else if(key(k) > faces(j)%key(k) )  then
+               if(je - jb == 1) then
+                  print *,'could not find the boundary face',ic,key,itype
+                  exit out_loop
+               end if
+               jb = j
+               cycle out_loop
+            end if
+         end do
+         exit out_loop
+      end do out_loop
+
+      faces(j)%ir = -itype
+   end subroutine map2face_su
+
+   subroutine map2face_gambit(ic,it,iface,itype)
+      integer::itype,ic,it,iface,n,nc,j
+      integer::f2n(10),key(3),jb,je
+      logical::check
+      select case(it)
+      case(2:3)  ! triangle and Quad
+         n = 2
+         nc = size(cells(ic)%c2n)
+         if(iface == nc) then
+            f2n(1) = cells(ic)%c2n(nc)
+            f2n(2) = cells(ic)%c2n(1)   
+         else
+            f2n(1:2) = cells(ic)%c2n(iface:iface+1)
+         end if
+      case(4)  ! Brick
+         n = 4
+         if(iface == 1) then
+            f2n(1:4) = cells(ic)%c2n((/1,2,5,6/))
+         else if(iface == 2) then
+            f2n(1:4) = cells(ic)%c2n((/2,3,7,6/))
+         else if(iface == 3) then
+            f2n(1:4) = cells(ic)%c2n((/3,4,8,7/))
+         else if(iface == 4) then
+            f2n(1:4) = cells(ic)%c2n((/4,1,5,8/))
+         else if(iface == 5) then
+            f2n(1:4) = cells(ic)%c2n((/2,1,4,3/))
+         else if(iface == 6) then
+            f2n(1:4) = cells(ic)%c2n((/5,6,7,8/))
+         end if
+      case(5)  ! Prisam
+         n = 4
+         if(iface == 1) then
+            f2n(1:4) = cells(ic)%c2n((/1,2,5,4/))
+         else if(iface == 2) then
+            f2n(1:4) = cells(ic)%c2n((/2,3,6,5/))
+         else if(iface == 3) then
+            f2n(1:4) = cells(ic)%c2n((/3,1,4,6/))
+         else if(iface == 4) then
+            n = 3
+            f2n(1:3) = cells(ic)%c2n((/1,2,3/))
+         else if(iface == 5) then
+            n = 3
+            f2n(1:3) = cells(ic)%c2n((/4,5,6/))
+         end if
+      case(6)  ! Tet
+         n = 3
+         if(iface == 1) then
+            f2n(1:n) = cells(ic)%c2n((/1,2,3/))
+         else if(iface == 2) then
+            f2n(1:n) = cells(ic)%c2n((/1,2,4/))
+         else if(iface == 3) then
+            f2n(1:n) = cells(ic)%c2n((/2,3,4/))
+         else if(iface == 4) then
+            f2n(1:n) = cells(ic)%c2n((/4,3,1/))
+         end if
+      case(7)  ! Pyramid
+         n = 3
+         if(iface == 1) then
+            n = 4
+            f2n(1:n) = cells(ic)%c2n((/1,2,3,4/))
+         else if(iface == 2) then
+            f2n(1:n) = cells(ic)%c2n((/1,2,5/))
+         else if(iface == 3) then
+            f2n(1:n) = cells(ic)%c2n((/2,3,5/))
+         else if(iface == 4) then
+            f2n(1:n) = cells(ic)%c2n((/3,4,5/))
+         else if(iface == 5) then
+            f2n(1:n) = cells(ic)%c2n((/4,1,5/))
+         end if     
+      end select
       !
       key(:ndim) = n2key(f2n(:n))
 
@@ -2125,9 +2237,7 @@ contains
       !    print *,'could not find the boundary face'
       !    print *,f2n(:n),key
       !   end if
-
-   end subroutine map2face
-
+   end subroutine map2face_gambit
 
    function nface_of_cell(nc,ndim)result(nf)
       integer,intent(in)::ndim,nc
