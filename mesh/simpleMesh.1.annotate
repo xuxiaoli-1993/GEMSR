@@ -1,0 +1,68 @@
+          12          13          24           2       !  Nnode, Ncell, Nface, Npart
+  0.999999999997388       0.000000000000000E+000   ! nodal coordinates
+   1.49999999999868       0.000000000000000E+000
+   1.25000000000241       0.566987298110747     
+   1.00000000000412        1.00000000000000     
+  0.500000000002081        1.00000000000000     
+  0.749999999998106       0.433012701890976     
+  0.328725833079403       0.633158858418915     
+  0.499999999998824       0.000000000000000E+000
+  0.000000000000000E+000   1.00000000000000     
+  0.000000000000000E+000  0.500000000002059     
+  0.289906066861234       0.288991032404113     
+  0.000000000000000E+000  0.000000000000000E+000
+           3           1           2           3           0   ! celll-node connectivity: size of c2n, c2n(:), cell itype (for mutli-domain)
+           3           4           5           6           0
+           3           1           3           6           0
+           3           3           4           6           0
+           3           6           5           7           0
+           3           8           1           6           0
+           3           9          10           7           0
+           3           5           9           7           0
+           3           8           6          11           0
+           3           6           7          11           0
+           3          10          12          11           0
+           3          12           8          11           0
+           3           7          10          11           0
+           1           1           2           3           2  ! face info: left cell, right cell id, size of f2n, f2n(:)
+           4           2           2           3           4
+          12          -4           2          12           8
+           8          -3           2           5           9
+           6          -4           2           8           1
+           1          -4           2           1           2
+           2          -3           2           4           5
+          11          -1           2          10          12
+           7          -2           2           9          10
+           9           6           2           8           6
+          12           9           2           8          11
+          11          12           2          12          11
+           3           1           2           1           3
+           3           6           2           6           1
+           8           7           2           9           7
+           2           4           2           6           4
+           5           2           2           6           5
+           8           5           2           7           5
+          13           7           2           7          10
+          13          11           2          10          11
+           4           3           2           6           3
+           5          10           2           7           6
+          10           9           2          11           6
+          13          10           2          11           7
+           7           1  ! periodic interface
+           1           2  ! sending info, 1 batch, send 2 cells
+           1           2          11           7  ! first send batch: to id 1, send 2 cells, cells id (local): 11, 7
+           1           2   ! receive info, 1 batch, receive 2 cells
+           1           2           8           9  ! first receive batch: from id 1, receive 2 cells, receiving-face id (local): 8, 9
+           2  ! no. of partitioning faces
+           1           6  ! sending info, 1 batch, 6 data points (each data point = sending cell or sending face)
+           1           4           2           1           2           3  ! first send batch: to id 1, 4 sending cells and 2 sending faces, sending cells: 1, 2, 3, 4, sending faces: 6&7
+           4           6           7
+           1           7  ! receive info, 1 batch, 7 data points
+           1           7  ! first receive batch: from id 1, 7 data points
+           2           3           2  ! first receiving cell, 2 sharing nodes, node id: 3, 2
+           2           4           3  ! second receiving cell, 2 sharing nodes, node id: 4, 3
+           1           2  ! thrid receiving cell, 1 sharing nodes, node id: 2
+           1           3  ! fourth receiving cell, 1 sharing node, node id: 3
+           1           3  ! fifth receiving cell, 1 sharing node, node id: 3
+           1           2  ! first receiving face, 1 sharing node, node id: 2
+           1           4  ! first receiving face, 1 sharing node, node id: 2

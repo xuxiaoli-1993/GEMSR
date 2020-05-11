@@ -11,7 +11,7 @@ OBJS =	gems_bound.o gems_constant.o gems_data.o gems_disc.o gems_fv.o gems_geom.
 #FFLAGS = -O --trap --tpp
 
 F90 = mpif90
-F90FLAGS = -O0 -g
+F90FLAGS = -O0 -g -trace
 #LDFLAGS = --static
 
 all: $(PROG)

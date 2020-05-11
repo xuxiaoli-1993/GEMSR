@@ -11,9 +11,9 @@ module gems_constant
 
    integer, parameter :: rfp  = selected_real_kind(8)
 
-   integer, parameter :: ndim = 3   ! - number of dimension
+   integer, parameter :: ndim = 2   ! - number of dimension
    integer, parameter :: nceq = 1   ! - number of continuous eq
-   integer, parameter :: nmeq = 3   ! - number of momentum eq
+   integer, parameter :: nmeq = 2   ! - number of momentum eq
    integer, parameter :: neeq = 1   ! - number of energy eq
    integer, parameter :: nteq = 0   ! - number of turblent eq
    integer, parameter :: naux = 0   ! - number of auxiliary eq

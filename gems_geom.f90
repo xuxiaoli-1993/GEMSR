@@ -242,6 +242,7 @@ contains
                   faces(i)%left_cell => cells(lf)
                   faces(i)%right_cell => cells(rf)
                else
+                  ! unstructured grid, make sure lf < rf
                   faces(i)%left_cell => cells(min(lf,rf))
                   faces(i)%right_cell => cells(max(lf,rf))
                end if

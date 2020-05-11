@@ -1,10 +1,10 @@
 &geom
 
 ! The is the input data for GEMS-DFD code
-  gridfile = "3D_mesh.dat",   	!the filename of grid generated
+  gridfile = "simpleMesh",   	!the filename of grid generated
 
-! or structured grid(ifmt=1 no difference...)
-  nd = 3,                  ! the dimension of the problem
+! ifmt = 2 is default or structured grid(ifmt=1)
+  nd = 2,                  ! the dimension of the problem
   lenref   = 1         ! length scale (x y z)=(x y z)*lenref
 &end 
 
@@ -44,7 +44,7 @@
   pbase   = 1.01e5 !1e5 !114700    ! reference pressure
   irea    = 0,	! 10 incompressible fluid (water), 0(air)
   isource = 9
-  iperiodic = 0  !(2d case set iperiodic=3)
+  iperiodic = 3  !(2d case set iperiodic=3)
   bodyvel = -0.0, 0.0 
 &end
 
@@ -56,25 +56,6 @@
    dt = 2.5e-3 ! the real time step in second
 &end
 !
-
-!&gas_prop
-!! Argon
-!!*******************************
-!!Define material properies for vapor mesh (levelset > 0)
-! itype = 0 ! 0: ideal gas, 1: "incompressible gas", 10: user defined
-! rho0=0.0
-! hrefi=0
-! htref=0
-! mwi = 39. !18. !56      ! Molecular weight of each species [g/mol]
-! cpi= 520. !4179. !495 ! Specific heat at constant pressure [J/kg K]
-!
-!! Sutherland's law
-! tref = 280.0
-! sref = 160.0
-! zmu = 2.16e-5  !-1.78e-5 !-1.14e-3,
-! Pr=0.68 !7.56 ! mu*cp/k
-! gravity = 0.0, -9.81  ! acceleration of gravity
-!&end
 
 &gas_prop
 ! Air
@@ -94,63 +75,6 @@
  Pr=0.68 !7.56 ! mu*cp/k
  gravity = 0.0, -9.81  ! acceleration of gravity
 &end
-
-!&gas_prop
-!! Water
-!!*******************************
-!!Define material properies for vapor mesh (levelset > 0)
-! itype = 0 ! 0: ideal gas, 1: "incompressible gas", 10: user defined
-! rho0=1000.
-! hrefi=0
-! htref=0
-! mwi = 18. !56      ! Molecular weight of each species [g/mol]
-! cpi= 4179. ! Specific heat at constant pressure [J/kg K]
-!
-!! Sutherland's law
-! tref = 280.0
-! sref = 160.0
-! zmu = -1.14e-3,
-! Pr=0.68 !7.56 ! mu*cp/k
-! gravity = 0.0, -9.81  ! acceleration of gravity
-!&end
-
-&turb
-!*******************************
-! These parameters used to decide the turbulence conditions in inlet for boundary layer flow (Menter)
-! omega = lamda*U/L, mut=Cmu * ulaminar, k=mut * omega / rho
-!Free-shear layers more sensitive to small freestream value of omega and larger values of omega are
-!needed in the freestream. lamda=40 for mixing layer, increasing to lamda=80 for round jets.
-!
-  lamda = 10.0, cmu = 1.0e-1,ksplus = .1   ! the dimensionless roughness, < 5 is smooth surface
-&end
-!
-
-!&solid_prop
-!!*******************************
-!!Stainless Steel 304
-!cpl = 780., cps = 700. ! J/(kg*K) ! specific heat  
-!kl = 44., ks = 44. ! W/(m*K) ! thermal conductivity
-!rhol = 6900., rhos = 7200. ! kg/m^3 ! density
-!lheat_melting = 2.47e5, lheat_evaporation = 6.36e6 ! J/kg ! latent heat
-!tl = 1727. , ts = 1697. ! K ! liquidus and solidus temperature
-!mul = 0.006 ! Pa*s (N/m^2*s) ! dynamic viscosity
-!k0 = 1.e-10 		
-!beta = 1.96e-5 ! K^-1 ! thermal expansion coefficient
-!sigmat = -0.43e-3 ! N/(m*K) ! Marangoni coefficient       
-!alpha = 0.35 ! Normal absorptivity
-!n = 3.24 ! refractive index
-!k = 4.48 ! extinction coefficient
-!Mw = 56. ! g/mol ! molecular weight
-!pb = 1.01e5 ! Pa ! reference boiling pressure 
-!Tb = 3375 ! K ! reference boiling temperature
-!emi = 0.9 ! emissivity
-!gv = 0.0,-9.8 ! gravity vector
-!Darcy_on = 1
-!Gravity_on = 0
-!Thermal_Buoyancy_on = 0
-!Enthalpy_Correction_on = 1
-!Evaporation_on = 0
-!&end
 
 &solid_prop
 !*******************************
@@ -176,7 +100,16 @@ Darcy_on = 1
 Gravity_on = 1
 Thermal_Buoyancy_on = 1
 Enthalpy_Correction_on = 1
-Evaporation_on = 1
+&end
+
+&turb
+!*******************************
+! These parameters used to decide the turbulence conditions in inlet for boundary layer flow (Menter)
+! omega = lamda*U/L, mut=Cmu * ulaminar, k=mut * omega / rho
+!Free-shear layers more sensitive to small freestream value of omega and larger values of omega are
+!needed in the freestream. lamda=40 for mixing layer, increasing to lamda=80 for round jets.
+!
+  lamda = 10.0, cmu = 1.0e-1,ksplus = .1   ! the dimensionless roughness, < 5 is smooth surface
 &end
 
 &number_of_boundary
@@ -184,15 +117,15 @@ Evaporation_on = 1
  n_in  = 0,     ! number of inlet boundary patches
  n_out = 0,     ! number of outlet boundary patches
  n_far = 0,     ! number of farfield (i.e. inlet/outlet) boundary patches
- n_wall = 6,     ! number of wall boundary patches
- n_geom = 0
+ n_wall = 2,     ! number of wall boundary patches
+ n_geom = 0,
  n_vol  = 0     ! number of volume conditions
 !
 &end
 !
 !&inlet
 !   label = 3,
-!   itype = 5, ! user-defined
+!   itype = 2, ! user-defined
 !   p = 1.01e5,
 !   T = 300.,
 !   u = 0.0
@@ -203,22 +136,6 @@ Evaporation_on = 1
 !   label = 6, itype = 6, ! free-slip
 !   pback = 1.01e5
 !&end
-
-&wall
-  label = 1,
-  itype = 3, ! no-slip, insulating wall
-  wtemp = 300.
-  wvel = 0.0,0.0
-  qw = 0.0
-&end
-
-&wall
-  label = 2,
-  itype = 3, ! no-slip, insulating wall
-  wtemp = 300.
-  wvel = 0.0,0.0
-  qw = 0.0
-&end
 
 &wall
   label = 3,
@@ -236,21 +153,6 @@ Evaporation_on = 1
   qw = 0.0
 &end
 
-&wall
-  label = 5,
-  itype = 3, ! no-slip, insulating wall
-  wtemp = 300.
-  wvel = 0.0,0.0
-  qw = 0.0
-&end
-
-&wall
-  label = 6,
-  itype = 3, ! no-slip, insulating wall
-  wtemp = 300.
-  wvel = 0.0,0.0
-  qw = 0.0
-&end
 !
 
 !

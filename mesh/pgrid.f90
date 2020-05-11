@@ -2,23 +2,25 @@ program pgrid
    implicit none
    integer, parameter :: rfp  = selected_real_kind(8)  ! resolution of floating point
    type node
-      real(kind=rfp),pointer::xyz(:)   ! coordination
+      real(kind=rfp),pointer::xyz(:)   ! nodal coordinates
       !   integer,pointer::n2n(:)
-      integer::nw
+      integer::nw  ! temp var
    end type node
 
    type cell
       integer,pointer::c2n(:) ! point to nodes
       !   integer,pointer::c2c(:) ! point to nodes
-      integer::c2c(6) ! point to nodes
-      integer::nw,ip,itype
+      integer::c2c(6) ! point to cells
+      integer::nw  ! temp var
+      integer::ip
+      integer::itype  ! mutli-domain
    end type cell
 
    type face
-      integer::il,ir  !  itype,il,ir
+      integer::il,ir  !  indices of left and right cell
       integer,pointer::f2n(:) ! pointer to nodes
-      integer::nw
-      integer::key(3)
+      integer::nw  ! temp var
+      integer::key(3)  ! idenfity unique face
    end type face
 
    type itf
@@ -26,22 +28,23 @@ program pgrid
       integer,pointer::cl(:)
    end type
 
-   type(cell),pointer::cells(:)
-   type(face),pointer::faces(:),new_faces(:),cf
+   type(cell),pointer :: cells(:)
+   type(face),pointer :: faces(:),new_faces(:),cf
    type(face)::fswap
-   type(node),pointer::nodes(:)
-   type(itf),pointer::myinterface(:,:),periodic_face(:,:)
+   type(node),pointer :: nodes(:)
+   type(itf), pointer :: mypinterface(:,:)
+   type(itf), pointer :: myinterface(:,:)
    !  
    character(len=80)::gridfile,newfile,line
    integer::istatus,nc,f2n(50),c2n(50),nnodes,ncells,nfaces,itype
-   integer :: i,j,k,l,fb,im,edgecut,k1,k2,k3,nbsets,nperiod,lab_period,nperiod_p
+   integer :: i,ii,j,jj,k,l,fb,im,edgecut,k1,k2,k3,nbsets,nperiod,lab_period,nperiod_p
    integer ::nparts,nct,ntf,nn,nf,ipl,ipr,ndim,nsend,nrecv,intf
    integer ::nvc,vc(50),vnparts(0:50),vncells
    integer,allocatable::epart(:),npart(:),adj(:),n2n(:),esize(:),ind(:)
 
    ! Xuxiao
    ! for division in all X, Y, and Z direction 
-   integer ::npartsX,npartsY,npartsZ
+   integer ::npartsX,npartsY,npartsZ,ngeom
    integer,allocatable::epartX(:),epartY(:),epartZ(:),npartX(:),npartY(:),npartZ(:)
 
    integer,allocatable::in(:,:,:),ic(:,:,:),ibc(:,:,:),vepart(:)
@@ -63,8 +66,8 @@ program pgrid
    print *,' 6 = FIELDVIEW unstructured format(3D only***)'
    print *,' 7 = su2 format, created from GMSH'
    print *,'***  if you choose 2D for FV format, I will try to give you z= 0 surface grid'
-   ! gridfile = "su3D"
-   gridfile = "sumesh"
+   gridfile = "simpleMesh"
+   ! gridfile = "su2D"
    !read(*,'(a)')gridfile
 
    print *, 'input file name is ',gridfile
@@ -360,7 +363,7 @@ program pgrid
 
       ! need to be modified for your grid
       !
-      ! write(*,*)'which type mesh 0=quadrilateral 1 = Hex? 2=triangle'
+      ! write(*,*)'which type mesh 0=quadrilateral 1 = Hex?'
       ! read(*,*)k
       k = 2
 
@@ -372,7 +375,7 @@ program pgrid
             ',f=feblock,et=brick'
       else if(k == 2) then
          write(12,*)'zone t="',i,'",n=',size(nodes),',e=',size(cells),  &
-            ',f=feblock,et=triangle'
+            ',f=feblock,et=tetrahedron'
       end if
       !
       do j = 1, ndim
@@ -382,23 +385,24 @@ program pgrid
       do j = 1, ncells
          l = size(cells(j)%c2n)
          c2n(:l) = cells(j)%c2n
-         ! select case(k)
-         ! case(0)
-         !    if(l == 3)  c2n(4) = c2n(3)
-         !    l = 4
-         ! case(1)
-         !    if(l == 4) then
-         !       c2n(4) = c2n(3)
-         !       c2n(5:8) = c2n(4)
-         !    else if(l == 5) then
-         !       c2n(5:8) = c2n(5)
-         !    else if(l == 6) then
-         !       c2n(8) = c2n(6)
-         !       c2n(5:7) = c2n(4:6)
-         !       c2n(4) = c2n(3)
-         !    end if
-         !    l = 8
-         ! end select
+         ! this is to replenish the artifial nodes for tecplot
+         select case(k)
+         case(0)
+            if(l == 3)  c2n(4) = c2n(3)
+            l = 4
+         case(1)
+            if(l == 4) then
+               c2n(4) = c2n(3)
+               c2n(5:8) = c2n(4)
+            else if(l == 5) then
+               c2n(5:8) = c2n(5)
+            else if(l == 6) then
+               c2n(8) = c2n(6)
+               c2n(5:7) = c2n(4:6)
+               c2n(4) = c2n(3)
+            end if
+            l = 8
+         end select
          write(12,10)c2n(:l)
       end do
       close(12)
@@ -678,11 +682,11 @@ program pgrid
          faces(i)%ir = -ind(faces(i)%ir)   ! convert bounary condition
       end do
       deallocate(ind)
-   case(5, 7)   ! Gambit
+   case(5, 7)   ! FE mesh: gambit and su2
       call fe2dfd_face
    end select
    !
-   ! do swap
+   ! do swap: move the boundary faces to the front of faces array
    fb = 0
    do i = 1, nfaces
       if(faces(i)%ir <= 0) then
@@ -700,7 +704,19 @@ program pgrid
    nperiod = 0
    close(2)
 
+   ! test periodic boundary condition
+   do i = 1, nfaces
+      if(faces(i) % ir > 0) exit
+      if(faces(i) % ir == -2) faces(i) % ir = -1
+   end do
+
+   ! do i = 1, nfaces
+   !    print *, i, faces(i) % il, faces(i) % ir
+   ! end do
    call treament_periodic_bc
+   ! do i = 1, nfaces
+   !    print *, i, faces(i) % il, faces(i) % ir
+   ! end do
 
    if(nparts <= 1) then
       open(2,file=gridfile(:len_trim(gridfile))//'.1',form='binary')
@@ -735,9 +751,8 @@ program pgrid
    !
    if(nparts > 1) then
 
-      !print *,'Which partitioning algorithm(0=user defined,1=metis edgecut,2=metis Comvolume,3=x,4=y,5=z,6=multi-domain,7=xyz)'
-      !along x
-      im = 7
+      print *,'Which partitioning algorithm(0=user defined,1=metis edgecut,2=metis Comvolume,3=x,4=y,5=z,6=multi-domain,7=xyz)'
+      im = 3
       print *, 'partitioning algorithm is ',im
       !read(*,*)im
 
@@ -762,6 +777,7 @@ program pgrid
          end do
          nparts = nvc
       case(1,2)
+      ! Missing METIS, do not use
          write(12,*)0,nparts-1,1,'  "gems.inp"'
          do i = 1, ncells
             !     allocate(cells(i)%c2c(max_c2c))
@@ -781,12 +797,10 @@ program pgrid
             n2n(adj(i-1):adj(i)-1) = cells(i-1)%c2c(:cells(i-1)%nw)
          end do
          if(im==1) then
-            !call METIS_PartGraphKway(ncells,adj,n2n,0,0,0,1,&
-            !			nparts,0,edgecut,epart)
+            ! call METIS_PartGraphKway(ncells,adj,n2n,0,0,0,1,nparts,0,edgecut,epart)
             print *,'total edges cut:',edgecut
          else
-            !      call METIS_PartGraphvKway(ncells,adj,n2n,0,0,0,1,&
-            !			    nparts,0,edgecut,epart)
+            ! call METIS_PartGraphvKway(ncells,adj,n2n,0,0,0,1,nparts,0,edgecut,epart)
             print *,'total communication volume:',edgecut
          end if
          deallocate(adj,n2n)
@@ -794,7 +808,10 @@ program pgrid
          write(12,*)0,nparts-1,1,'  "gems.inp"'
          allocate(npart(size(nodes)))
          allocate(epart(ncells),stat=istatus)
-         call Geom_Partijk(npart,nparts,im-2)
+
+         call Geom_Partxyz(npart, nparts, im-2)
+         ! call Geom_Partijk(npart,nparts,im-2)
+
          do i = 1, ncells
             epart(i) = minval(npart(cells(i)%c2n))
          end do
@@ -870,7 +887,7 @@ program pgrid
          else if(nparts == 8) then
             npartsX = 2; npartsY = 2; npartsZ = 2
          else if(nparts == 16) then
-            npartsX = 2; npartsY = 4; npartsZ = 2
+            npartsX = 2; npartsY = 2; npartsZ = 4
          else if(nparts == 20) then
             npartsX = 2; npartsY = 5; npartsZ = 2
          else if(nparts == 32) then
@@ -898,9 +915,13 @@ program pgrid
          allocate(epartZ(ncells), stat = istatus)
          allocate(epart(ncells), stat = istatus)
 
-         call Geom_Partijk(npartX, npartsX, 1)
-         call Geom_Partijk(npartY, npartsY, 2)
-         call Geom_Partijk(npartZ, npartsZ, 3)
+         ! call Geom_Partijk(npartX, npartsX, 1)
+         ! call Geom_Partijk(npartY, npartsY, 2)
+         ! call Geom_Partijk(npartZ, npartsZ, 3)
+         call Geom_Partxyz(npartX, npartsX, 1)
+         call Geom_Partxyz(npartY, npartsY, 2)
+         call Geom_Partxyz(npartz, npartsZ, 3)
+
          do i = 1, ncells
             epartX(i) = minval(npartX(cells(i) % c2n))
             epartY(i) = minval(npartY(cells(i) % c2n))
@@ -945,6 +966,7 @@ program pgrid
    call setup_interface
    !
    if(nperiod > 0) call setup_periodic_interface
+
    !
    esize = 0
    do i = 1,ncells
@@ -952,12 +974,19 @@ program pgrid
       cells(i)%ip = epart(i)
       !   cells(i)%nw = esize(epart(i))
    end do
+
+   do i = 1, ncells
+      print *, i, cells(i) % ip
+   end do
    !   
    print *,esize
    open(12,file='dfd.plt')
    !
    do i = 1,nparts
+      ! find cells, nodes, faces for this partition
+      ! must re-index for the cells, nodes and faces for this partition
       open(2,file=gridfile(:len_trim(gridfile))//'.'//i2s(i),form='binary')
+      ! open(2,file=gridfile(:len_trim(gridfile))//'.'//i2s(i))
       !
       print *,'Partition:',i
       write(12,'("variables = ")')
@@ -1007,10 +1036,10 @@ program pgrid
       end do
       !
       !  treat face's information
-      nf = 0
-      intf = 0
-      fb = 0
-      nperiod_p = 0
+      nf = 0  ! no. of totall faces
+      intf = 0  ! no. of partitioning faces
+      fb = 0  ! no. of boundary faces
+      nperiod_p = 0   ! no. of periodic boundary faces
       do j = 1, nfaces
          cf => faces(j)
          if(cf%ir < 0 ) then
@@ -1048,7 +1077,7 @@ program pgrid
             ipl = cells(cf%il)%ip
             if( ipl /= i) cycle
             k1 = k1 + 1
-            l = intf + k1
+            l = intf + k1  ! count from intf for boundary faces
             new_faces(l) = faces(j)
             faces(j)%nw = l
          else
@@ -1058,17 +1087,18 @@ program pgrid
             if(ipl /= i .and. ipr /= i) cycle
             if(ipl == i .and. ipr == i) then
                k2 = k2 + 1
-               l = intf + fb + k2
+               l = intf + fb + k2  ! count from fb + intf for interior faces
                new_faces(l) = faces(j)
-            else if(ipl == i) then
+            else if(ipl == i) then  ! partitioning faces
                k3 = k3 + 1
                l = k3
                new_faces(l) = faces(j)
-            else
+            else  ! partitioning faces
                k3 = k3 + 1
                l = k3
                new_faces(l) = faces(j)
-               new_faces(l)%il = faces(j)%ir
+               ! make sure the left cell stays inside the current partition
+               new_faces(l)%il = faces(j)%ir  
                new_faces(l)%ir = faces(j)%il
             end if
          end if
@@ -1084,6 +1114,41 @@ program pgrid
       !   write(newfile,'(a,1h.,i3)')gridfile(:len_trim(gridfile)),i   
       !   end if
 
+      ! do ii = 1, size(cells)
+      !    print *, ii, cells(ii) % nw
+      ! end do
+      ! print *, '-------------'
+
+      ! do ii = 1, size(nodes)
+      !    print *, ii, nodes(ii) % nw
+      ! end do
+      ! print *, '-------------'
+
+      ! do ii = 1, size(new_faces)
+      !    print *, ii, new_faces(ii) % il, new_faces(ii) % ir
+      ! end do
+      ! print *, '-------------'
+
+      ! do ii = 1, nfaces
+      !    print *, ii, faces(ii) % il, faces(ii) % ir
+      ! end do
+      ! print *, '-------------'
+
+      ! do ii = 1, nparts
+      !    do jj = 1, nparts
+      !       print *, ii, jj, myinterface(ii,jj) % n, myinterface(ii,jj) % m
+      !       print *, myinterface(ii,jj) % cl
+      !    end do
+      ! end do
+      ! print *, '-------------'
+
+      ! do ii = 1, nparts
+      !    do jj = 1, nparts
+      !       print *, ii, jj, mypinterface(ii,jj) % n, mypinterface(ii,jj) % m
+      !       print *, mypinterface(ii,jj) % cl
+      !    end do
+      ! end do
+      ! stop
 
       ! Just for ploting
       !
@@ -1093,17 +1158,27 @@ program pgrid
       !print *,'-------'
 
       write(2)nn,esize(i),size(new_faces),nparts
+      ngeom = 3
       !
       !
-      if(ndim == 2) then
-         write(12,*)'zone t="',i,'",n=',nn,',e=',esize(i),   &
-            ',f=feblock,et=quadrilateral'
-      else
-         write(12,*)'zone t="',i,'",n=',nn,',e=',esize(i),   &
-            ',f=feblock,et=brick'
-         !   write(12,*)'zone t="',i,'",n=',nn,',e=',esize(i),   &
-         !                 ',f=feblock,et=tetrahedron'
-      end if
+      select case(ngeom)
+      case(1)
+         write(12,*)'zone t="',i,'",n=',nn,',e=',esize(i), ',f=feblock,et=triangle'
+      case(2)
+         write(12,*)'zone t="',i,'",n=',nn,',e=',esize(i), ',f=feblock,et=quadrilateral'
+      case(3)
+         write(12,*)'zone t="',i,'",n=',nn,',e=',esize(i), ',f=feblock,et=tetrahedron'
+      case(4)
+         write(12,*)'zone t="',i,'",n=',nn,',e=',esize(i), ',f=feblock,et=brick'
+      case default
+         if(ndim == 2) then
+            write(12,*)'zone t="',i,'",n=',nn,',e=',esize(i), ',f=feblock,et=quadrilateral'
+         else if(ndim == 3) then
+            write(12,*)'zone t="',i,'",n=',nn,',e=',esize(i), ',f=feblock,et=brick'
+         else
+            print *, 'cannot plot 1D mesh'; stop
+         end if
+      end select
 
       do k = 1, nn
          write(2)nodes(npart(k))%xyz
@@ -1124,23 +1199,25 @@ program pgrid
          if(epart(j) == i) then
             l = size(cells(j)%c2n)
             c2n(:l) = cells(j)%c2n
-            select case(ndim)
-            case(2)
-               if(l == 3)  c2n(4) = c2n(3)
-               l = 4
-            case(3)
-               if(l == 4) then
-                  c2n(4) = c2n(3)
-                  c2n(5:8) = c2n(4)
-               else if(l == 5) then
-                  c2n(5:8) = c2n(5)
-               else if(l == 6) then
-                  c2n(8) = c2n(6)
-                  c2n(5:7) = c2n(4:6)
-                  c2n(4) = c2n(3)
-               end if
-               l = 8
-            end select
+            if(ngeom > 4) then  ! mixed mesh
+               select case(ndim)
+               case(2)
+                  if(l == 3)  c2n(4) = c2n(3)
+                  l = 4
+               case(3)
+                  if(l == 4) then
+                     c2n(4) = c2n(3)
+                     c2n(5:8) = c2n(4)
+                  else if(l == 5) then
+                     c2n(5:8) = c2n(5)
+                  else if(l == 6) then
+                     c2n(8) = c2n(6)
+                     c2n(5:7) = c2n(4:6)
+                     c2n(4) = c2n(3)
+                  end if
+                  l = 8
+               end select
+            end if
             write(12,10)nodes(c2n(:l))%nw
          end if
       end do
@@ -1162,7 +1239,7 @@ program pgrid
       !
       call collection_period
       !
-      write(2)intf   ! number of interface
+      write(2)intf   ! number of partitioning faces
       nn = 0
       nc = 0
       do j = 1, nparts
@@ -1210,7 +1287,7 @@ program pgrid
                k3 = k3 + 1
                c2n(k3) = nodes(faces(k1)%f2n(k2))%nw
             end do
-            if(k3 == 0) print *,'something wrong ',nodes(cells(k1)%c2n)%nw
+            if(k3 == 0) print *,'something wrong ',nodes(faces(k1)%f2n)%nw
             write(2)k3,c2n(:k3)
             !
          end do
@@ -1240,21 +1317,20 @@ contains
       nc = 0
       nn = 0
       do j = 1, nparts
-         if(periodic_face(i,j)%m /= 0) nn = nn + 1
-         if(periodic_face(j,i)%m /= 0) nc = nc + 1
+         if(mypinterface(i,j)%m /= 0) nn = nn + 1
+         if(mypinterface(j,i)%m /= 0) nc = nc + 1
       end do
 
-      write(2)nn,sum(periodic_face(i,:)%m)    ! send
+      write(2)nn,sum(mypinterface(i,:)%m)    ! send
       do j = 1, nparts
-         k2 = periodic_face(i,j)%m
-         if(k2 /= 0) &
-            write(2)j-1,k2,cells(periodic_face(i,j)%cl(:k2))%nw
+         k2 = mypinterface(i,j)%m
+         if(k2 /= 0) write(2)j-1,k2,cells(mypinterface(i,j)%cl(:k2))%nw
       end do
       !
-      write(2)nc,sum(periodic_face(:,i)%m)    ! receive      
+      write(2)nc,sum(mypinterface(:,i)%m)    ! receive      
       do j = 1, nparts
-         k2 = periodic_face(j,i)%m
-         if(k2 /= 0) write(2)j-1,k2,faces(periodic_face(j,i)%cl(k2+1:))%nw
+         k2 = mypinterface(j,i)%m
+         if(k2 /= 0) write(2)j-1,k2,faces(mypinterface(j,i)%cl(k2+1:))%nw
       end do
       !
    end subroutine collection_period
@@ -1263,40 +1339,42 @@ contains
       integer::i,j,k
       integer,pointer::n,m
       !
-      allocate(periodic_face(nparts,nparts))
+      allocate(mypinterface(nparts,nparts))
       !
       !
-      periodic_face%m = 0
+      mypinterface%m = 0
       do k = nperiod+1, fb    !size(faces)
          i = epart(faces(k)%il)
          j = epart(abs(faces(k)%ir))
-         m => periodic_face(j,i)%m
+         m => mypinterface(j,i)%m
          m = m + 1
       end do
       !
       do i = 1, nparts
          do j = 1, nparts
-            m => periodic_face(i,j)%m
+            m => mypinterface(i,j)%m
             if(m == 0) cycle
-            allocate(periodic_face(i,j)%cl(m*2))
+            allocate(mypinterface(i,j)%cl(m*2))
          end do
       end do
-      periodic_face%n = periodic_face%m
-      periodic_face%m = 0
+      mypinterface%n = mypinterface%m
+      mypinterface%m = 0
       do k = nperiod+1, fb    !size(faces)
          i = epart(faces(k)%il)
          j = epart(abs(faces(k)%ir))
-         m => periodic_face(j,i)%m
-         n => periodic_face(j,i)%n
+         m => mypinterface(j,i)%m
+         n => mypinterface(j,i)%n
          m = m + 1
-         periodic_face(j,i)%cl(m) = abs(faces(k)%ir)   ! cell
-         periodic_face(j,i)%cl(n+m) = k    !face	
+         mypinterface(j,i)%cl(m) = abs(faces(k)%ir)   ! cell
+         mypinterface(j,i)%cl(n+m) = k    !face	
       end do
 
    end subroutine setup_periodic_interface
 
+   ! gather interface info to myinterface
+   ! this includes interface cells as interface boundary faces
    subroutine setup_interface
-      integer::i,j,k
+      integer::i,j,k,ii
       integer,pointer::n,m
       !
       allocate(myinterface(nparts,nparts))
@@ -1309,6 +1387,10 @@ contains
             if(epart(j) /= i) cycle
             nodes(cells(j)%c2n)%nw = 1
          end do
+
+         ! do ii = 1, size(nodes)
+         !    print *, ii, nodes(ii) % nw
+         ! end do
          !
          cells%nw = 0   
          faces%nw = 0
@@ -1434,6 +1516,7 @@ contains
          p(i) = min(nps,p(i))
          p(i) = max(1,p(i))
       end do 
+      deallocate(xcd, xcoord)
    end subroutine Geom_Partijk
 
    !some subroutines to operate an array written by Xuxiao
@@ -1848,7 +1931,8 @@ contains
          c2n(:nc) = c2n(:nc)   
          allocate(cells(i)%c2n(nc))
          cells(i)%c2n = c2n(:nc)
-         if(nc == 8) then  ! Brick --- stupid connectivity
+         ! rearrange the local connectivity to fit DFD convention
+         if(nc == 8) then  ! Brick
             cells(i)%c2n(3) = c2n(4)
             cells(i)%c2n(4) = c2n(3)
             cells(i)%c2n(7) = c2n(8)
@@ -1883,15 +1967,24 @@ contains
       faces%il = 0
       faces%ir = 0
       k = 0
+      ! double-count all the faces based on cells
       do i = 1, ncells  
          call cell2face(cells(i)%c2n,k,i)
       end do
       if(k /= nfaces) print *,'error in faces list',k,nfaces
 
+      ! do i = 1, nfaces
+      !    print *, faces(i) % il
+      ! end do
+
       call sort_face
 
    end subroutine fe2dfd_face
 
+   ! extract c2n in cells to f2n in faces
+   ! c2n must be aligned such that f2n makes sense
+   ! if c2n is not aligned as the convention in this subroutine
+   ! must rearrange c2n when reading connectivity data
    subroutine cell2face(c2n,k,ic)
       integer,intent(in)::c2n(:),ic
       integer::k,nc
@@ -1973,15 +2066,21 @@ contains
       end select
    end subroutine cell2face
 
+   ! move the non-repeating to the front of faces array
+   ! re-define nfaces to be the number of non-repeating faces
    subroutine sort_face
       type(face)::fswep
       integer::incr,n,i,j,k
       logical::check
 
+      ! assign a key to each face
+      ! the key is the sorted array of the nodal indices
       do i = 1, nfaces
          !    allocate(faces(i)%key(ndim))
          faces(i)%key = n2key(faces(i)%f2n)   
+         ! print *, i, faces(i) % key, faces(i) % il, faces(i) % ir
       end do
+      ! print *, '----------------------------'
       !
       n = nfaces
       !
@@ -1992,6 +2091,8 @@ contains
       end do
       !
       !   Loop : Shell-Metzner sort
+      !   Sort by face keys, the sorted array starts from the smallest key to largest
+      !   When face key is multi-dimensional, start sorting from the first dim., then second, third
       !
       20 INCR = INCR / 3
       I = INCR + 1
@@ -2013,6 +2114,12 @@ contains
       GOTO 30
       60 IF (INCR .GT. 1) GOTO 20
 
+      ! do i = 1, nfaces
+      !    print *, i, faces(i) % key, faces(i) % il, faces(i) % ir
+      ! end do
+      ! print *, '----------------------------'
+
+      ! move non-repeating faces to front
       k = 1
       fswep = faces(1)
       do i = 2, nfaces
@@ -2032,6 +2139,12 @@ contains
             faces(k) = fswep
          end if
       end do 
+
+      ! do i = 1, nfaces
+      !    print *, i, faces(i) % key, faces(i) % il, faces(i) % ir
+      ! end do
+      ! print *, '----------------------------'
+
       nfaces = k
       !
    end subroutine sort_face
@@ -2265,7 +2378,6 @@ contains
       end select
    end function nface_of_cell  
 
-
    function n2key(f2n)result(key)
       implicit none
       integer,intent(in)::f2n(:)
@@ -2334,7 +2446,6 @@ contains
       60 IF (INCR .GT. 1) GOTO 20
       !
    end subroutine sort
-
 
    subroutine fieldview2dfd
       integer,pointer::itype(:),nf(:),f2n(:,:),bc(:)
@@ -2557,11 +2668,12 @@ contains
       write(*,*)'Do you have periodic boundary condition 0=no,1=cylindrical(3D),2=planar(3D),3=2D case'
       !no periodic boundary condition
       print *, 'no periodic boundary condition'
-      id = 0
+      id = 3
       !read(*,*)id
       if(id ==0) return
       write(*,*)'Please input the labels for Periodic BC'
-      read(*,*)lab_period
+      !read(*,*)lab_period
+      lab_period = 1
       if(id == 1) then
          write(*,*)'please tell me which axis is cylindrical axis,1=x,2=y,3=z?'
       else if(id == 2) then
@@ -2569,7 +2681,8 @@ contains
       else
          write(*,*)'which coordinate is used to match,1=x,2=y?'
       end if
-      read(*,*)iax
+      ! read(*,*)iax
+      iax = 2
       if(id == 1) then
          write(*,*)'please input the center of periodic surface?(0.0,0.0)'
          read(*,*)x0
@@ -2583,6 +2696,7 @@ contains
       do i = 1, nb
          if(abs(faces(i)%ir) /= lab_period) cycle
          iy = 0
+         ! find matching coordinates save to rci and zci
          call rc_zc(i,x0,rci,zci,iax,id)
          do j = i+1,nb
             if(abs(faces(j)%ir) /= lab_period) cycle

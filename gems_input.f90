@@ -76,7 +76,7 @@ contains
 
       !set up fluid and solid properties
       call fluid_property
-      call solid_property
+      if(s_irealgas > 110) call solid_property
       !read the namelist turb from gems.inp
       call turbulence_model_paramter
       !
@@ -872,7 +872,7 @@ contains
       ! fluid property
       real :: rhol, rhos, cpl, cps, lheat_melting, lheat_evaporation, kl, ks, mul, beta, sigma, sigmat, k0, dl, alpha, emi
       real :: tl, ts, gv(ndim), n, k, Mw, pb, Tb
-      integer :: Darcy_on, Thermal_Buoyancy_on, Gravity_on, Enthalpy_Correction_on, Evaporation_on
+      integer :: Darcy_on, Thermal_Buoyancy_on, Gravity_on, Enthalpy_Correction_on 
       namelist /solid_prop/rhol, rhos, cpl, cps, lheat_melting, lheat_evaporation, kl, ks, mul, beta, sigma, sigmat, k0, dl, alpha, emi, tl, ts, gv, n, k, Mw, pb, Tb, Darcy_on, Thermal_Buoyancy_on, Gravity_on, Enthalpy_Correction_on
       integer :: id, ierr
 

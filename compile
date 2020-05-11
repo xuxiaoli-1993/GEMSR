@@ -17,7 +17,7 @@ then
    module load intel mpich
    echo "use intel to compile with flag -O0 -g"
    echo "***************************************************"
-   sed "s/^F90FLAGS = .*/F90FLAGS = -O0 -g/" < makefile_mtemp > Makefile
+   sed "s/^F90FLAGS = .*/F90FLAGS = -O0 -g -trace/" < makefile_mtemp > Makefile
    #sed "s/^F90FLAGS = .*/F90FLAGS = -O0 -g -init=snan,arrays -traceback/" < makefile_mtemp > Makefile
 elif [ $1 == 2 ]
 then
