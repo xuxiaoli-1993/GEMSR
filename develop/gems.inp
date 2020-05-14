@@ -44,7 +44,7 @@
   pbase   = 1.01e5 !1e5 !114700    ! reference pressure
   irea    = 0,	! 10 incompressible fluid (water), 0(air)
   isource = 9
-  iperiodic = 3  !(2d case set iperiodic=3)
+  iperiodic = 4  !(<3 for cylindar =4 for planar)
   bodyvel = -0.0, 0.0 
 &end
 
@@ -118,7 +118,7 @@ Enthalpy_Correction_on = 1
  n_out = 0,     ! number of outlet boundary patches
  n_far = 0,     ! number of farfield (i.e. inlet/outlet) boundary patches
  n_wall = 2,     ! number of wall boundary patches
- n_geom = 0,
+ n_geom = 1,     ! number of geometric boundary patches
  n_vol  = 0     ! number of volume conditions
 !
 &end
@@ -151,6 +151,11 @@ Enthalpy_Correction_on = 1
   wtemp = 300.
   wvel = 0.0,0.0
   qw = 0.0
+&end
+
+&geom_type
+  label = 1,
+  itype = 2  ! periodic (pairs must count as one)
 &end
 
 !

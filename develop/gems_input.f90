@@ -143,7 +143,6 @@ contains
 
       !calcualte face%avec which stores the 3 normal vectors of a face 
       call face_reconstruction(faces, nodes) 
-      !  call initial_cell_gradient(cells,faces)  
 
       close(11)
       close(32)
@@ -1628,7 +1627,9 @@ contains
       ! call mpi_bcast(b_vinf,rfp,mpi_byte,0,mpi_comm_world,ierr)
       ! call mpi_bcast(b_re,rfp,mpi_byte,0,mpi_comm_world,ierr)
 
-      !make face%itype equal to bc%label
+      ! make face%itype equal to bc%label
+      ! count no. of boundary faces for each boundary patch
+      ! cal. boundary area for each boundary patch
       bc % area = zero
       bc % n = 0
       do i = interf % nitf + 1, size(faces)
@@ -1636,7 +1637,7 @@ contains
          do j = 1, n_total
             if (faces(i) % itype == bc(j) % label) then
                faces(i) % itype = j
-               bc(j) % n = bc(j) % n + 1 ! counting no. of boundary faces
+               bc(j) % n = bc(j) % n + 1
                if (ndim == 2.and.s_iaxis > 0) then
                   bc(j) % area = bc(j) % area + faces(i) % area * &
                      pi * abs(nodes(faces(i) % f2n(1)) % xyz(s_iaxis) + nodes(faces(i) % f2n(2)) % xyz(s_iaxis))
@@ -2214,6 +2215,8 @@ contains
       do i = 1, n
          !  Default values
          itype = 0; ni = 0; id = 0
+         rcenter = zero
+         angle = zero
          !
          k = k + 1
          read(11, geom_type)

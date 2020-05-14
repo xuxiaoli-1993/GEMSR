@@ -1,0 +1,202 @@
+&geom
+! The is the input data for GEMS-DFD code
+  gridfile = "largemesh.neu",   	!the filename of grid generated
+
+!                           ! or structured grid(ifmt=1)
+  nd = 3,                  ! the dimension of the problem
+  lenref   = 0.001         ! length scale (x y z)=(x y z)*lenref
+&end 
+
+&solution
+!*****************************
+! Define solution parameter,e.g. how mang iterations, which algorith, which accuracy, etc..
+
+ irestart = 0,	!65,	!40,	 ! 0: first run 1 restart from previous results
+
+!                   ! code will automatically backup results to hard disk every 200 iterations
+  nsteps   = 200, ! specify the number of iterations
+  ivis     = 1,     ! which kind of flow 0:inviscid 1:laminar 2:turbulence
+  init     = 0,     ! indicate how to set initinal condition (0 1 2 3)
+  ipre     = 3,     ! 0 without preconditioning
+!                   1 max vel and viscous vel
+!                   2 max vel and local pressure
+!                   3 max vel
+!                   4 only cell vel
+!                   5 max vel and perturbation pressure
+!                   6 cutoff with vnn 
+  imeth    = 1,     ! algorithm 0 explicit 1 Point-Guess 2 LU 3 GMRES 4 CGNS  5 Line-Guess
+  isub     = 5,     ! Number of subiterations for linear solver  
+  ialg     = -1,     !0 first order scheme 1 second order -1 limited second order
+  irec     = 1,     ! 1 least square reconstruction  2. dl's reconstruction
+  iscr=1,ifile=1,   ! residual output 0 no 1 yes
+  ischeme = 0
+  iplot    = 1,     ! 0 no plot 1 tecplot 2 fieldview
+  cflmin=1.e-12,
+  cflmax=1
+!CFL:cflmin + (cflmax-cflmin)*it/100; it<100 :cflmax otherwise
+!                             !if cflmin > cflmax cfl = cflmax
+   damping = 100
+  vnn     = 10.0,     ! Von Neumann number
+  errm    =-10.0,     ! Stopping criteria log(sqrt(sum(dQ*dQ)/sum(Q*Q))) < errm
+  pbase   = 1.e5    ! reference pressure
+  irea    = 110,isource=9
+  iperiodic = 0  !(2d case set iperiodic=3)
+  ilevelset = 1  ! level set
+  bodyvel = 0.0 
+&end
+
+&unsteady
+!*******************************
+   idt = 2,  ! 0 = steady > 1 unsteady  =1 first order of time deriva 2 second order
+    nt = 10, ! The iterations taken in each real time step of dual step
+ imonit = 10, ! 0 no monitoring 1 output results every each real time to dfd_mon_x.plt
+   dt = 10e-5 ! the real time step in second
+
+&end
+!
+&gas_prop
+!*******************************
+! pfile = "inlet.chem",
+!rhol=2500.
+ mwi = 28.9        ! Molecular weight of each species
+ cpi=1006.     ! Specific heat at constant pressure
+ hrefi = 0.0         ! reference enhalpy h=href+Cp(T-Tref)
+ htref = 0.0,         ! reference temperature
+ zmu = -1.681e-5,      ! Viscosity < 0 means constant viscosity otherwise calculate from Suthlander's formula
+ tref = 273.,       ! Temperature at sealevel K
+ sref = 110.5,       ! Sutherland's constant K
+!                      !  mu = 1.7894e-5(T/T0)^3/2(T0+S)/(T+S)
+ pr =0.71             ! Prantal number
+! gravity = 0.0, -9.8  ! acceleration of gravity
+&end
+!
+&solid_prop
+!*******************************
+cpl = 780., cps = 700.  
+kl = 44., ks=44.,     
+!rhol = 7200.,rhos=6900. 
+rhol = 7000.,rhos=7000. 
+lheat = 2.47e5          
+tl = 1727.              
+ts = 1697.              
+mul = 0.006, 		
+k0 = 1.e-10 		
+beta = 1.96e-5          
+sigmat = -0.43e-3 
+sigma = 1.6      
+alpha = 0.4	!0.35            
+emi = 0.9               
+gv = 0.0,-9.8
+&end
+!
+
+&laser_prop
+!*******************************
+ p = 350.
+ rb = 0.00025
+ A = 2
+ x0 = -0.625e-3
+ z0 = 0e-3
+ vx = 0.0127
+ vz = 0.
+ zigzag=0.0
+ switch=0.0
+ thick=0.1e-3	!layer_thickness
+ patch=0.35e-3	!patch_dist
+ length=1.25e-3	!length for each pass
+ dtpass=0.0	!time between two passes
+ dtlayer=0.0	!time between two layers
+ passes=1.0	!passes in each layer
+ cold=0	!whether to start from room temperature
+ laseron=1
+&end
+!
+
+&powderflow_prop
+!*******************************
+ c = 25.0
+ vp = 5.6
+ A = 2e-4
+ B = 2.
+ rp = 2.5e-4
+ h = 10
+&end
+!
+
+&turb
+!*******************************
+! These parameters used to decide the turbulence conditions in inlet for boundary layer flow (Menter)
+! omega = lamda*U/L, mut=Cmu * ulaminar, k=mut * omega / rho
+!Free-shear layers more sensitive to small freestream value of omega and larger values of omega are
+!needed in the freestream. lamda=40 for mixing layer, increasing to lamda=80 for round jets.
+!
+  lamda = 10.0, cmu = 1.0e-1,ksplus = .1   ! the dimensionless roughness, < 5 is smooth surface
+&end
+!
+&number_of_boundary
+!********************************
+ n_in  = 0,     ! number of inlet boundary patches
+ n_out = 1,     ! number of outlet boundary patches
+ n_far = 0,     ! number of farfield (i.e. inlet/outlet) boundary patches
+ n_wall = 1     ! number of wall boundary patches
+ n_geom = 0
+ n_vol  = 0     ! number of volume conditions
+!
+&end
+!
+!&inlet 
+!!----------
+!  label = 4, !  Air inlet
+!  itype = 4, ! 0 entropy and stagnation enthalpty and their value calculate from p t mach
+!!           ! 1 entropy and stagnation enthalpty and their value calculate from p t u 
+!
+!  p = 1.e5, T = 400.0,   ! pressure and temperature
+!  u = 1.0,rcenter=1.0,0.0
+!
+!&end  
+
+!! if multi-inlets, please repeat here
+!
+&outlet
+!-----------
+   label = 2, itype = 0,
+   pback = 1.0165e5           ! back pressure
+&end
+!! if you have multi-outlets, please repeat here
+!!
+&farfield 
+ label = 6, itype = 0
+  p = 1.0e5, t = 273.0,   ! pressure and temperature
+  MACH = .8                 ! Mach number, specify mach or velocity magnitude
+  kin=10., omega = 1.e5
+&end  
+!! if multi-farfields, please repeat here
+!!
+!!
+&wall
+   label = 1, itype = 8 ! 0 invicid or slip wall
+!!    wtemp = 1000.
+&end
+
+!&wall
+!   label = 3, itype = 8 
+!&end
+
+
+!&wall
+!   label = 2, itype = 1  !10 temp & invicid,  0 invicid or slip wall
+!    wtemp = 4000.,
+!&end
+!
+&initial_condition
+!------------------
+islast = 1
+t=300.,     ! pressure and temperature
+p = 1.0165e5, u=0.0
+&end
+
+&output_vars
+temperature = 1,
+!velx=1,vely=1,velz=1,static_pressure=1,density=1,
+levelset=1
+&end

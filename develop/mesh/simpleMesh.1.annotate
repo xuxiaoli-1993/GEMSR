@@ -48,7 +48,7 @@
            5          10           2           7           6
           10           9           2          11           6
           13          10           2          11           7
-           7           1  ! periodic interface
+           7           1  ! periodic interface: index where periodic boundary faces start, label for the periodic boundary
            1           2  ! sending info, 1 batch, send 2 cells
            1           2          11           7  ! first send batch: to id 1, send 2 cells, cells id (local): 11, 7
            1           2   ! receive info, 1 batch, receive 2 cells

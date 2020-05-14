@@ -120,7 +120,7 @@ Darcy_on	gems_type.f90	/^    integer :: Darcy_on,/;"	k	type:solid
 Enthalpy_Correction_on	gems_type.f90	/^    integer :: Darcy_on, Thermal_Buoyancy_on, Gravity_on, Enthalpy_Correction_on,/;"	k	type:solid
 Evaporation_on	gems_type.f90	/^    integer :: Darcy_on, Thermal_Buoyancy_on, Gravity_on, Enthalpy_Correction_on, Evaporation_on$/;"	k	type:solid
 F90	Makefile	/^F90 = mpif90$/;"	m
-F90FLAGS	Makefile	/^F90FLAGS = -O0 -g$/;"	m
+F90FLAGS	Makefile	/^F90FLAGS = -O0 -g -trace$/;"	m
 FALSE	gems_rptbdb.f90	/^   logical, parameter :: FALSE /;"	v	module:RPTBDB_constant
 FTT_BACK	gems_rptbdb.f90	/^   integer, parameter :: FTT_FRONT = 5, FTT_BACK /;"	v	module:RPTBDB_constant
 FTT_BOTTOM	gems_rptbdb.f90	/^   integer, parameter :: FTT_RIGHT = 1, FTT_LEFT = 2, FTT_TOP = 3, FTT_BOTTOM /;"	v	module:RPTBDB_constant

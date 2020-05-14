@@ -296,7 +296,7 @@ contains
       end if
 
       if(n == 1) then
-         interf%nitf = nitf
+         interf%nitf = nitf  ! if single core, nitf = 0
          return
       end if
       !

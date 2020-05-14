@@ -158,6 +158,8 @@ program gems_main
 
       call source(cells, nodes)
 
+      call chemical_reaction(cells)
+
       call implicit_boundary_condition(faces)
 
       call lhs(cells, faces, nodes)
@@ -166,14 +168,21 @@ program gems_main
 
       call update_cells(cells, faces, nadv)
 
-      ! impose boundary conditions, do MPI communication, and calculate nodal value
+      if (s_iperiod > 0) call update_pinterface(nodes, cells, faces, pinterf)
+
       call boundary_condition(faces, nodes, cells, interf)
 
       call update_interface(faces, nodes, cells, interf) 
 
-      call check_conv(cells, faces, nadv)
+      if (s_ivis == 3) call turb_baldwin_lomax(cells, faces, interf)
 
       call cal_node_qv(cells, nodes, faces, interf, bnodes)
+
+      call output_result(cells,nodes,faces,interf,id,nadv)
+
+      call check_conv(cells, faces, nadv)
+
+      if (mod(nadv, 100) == 0) call save_binary(nadv, cells, faces, nodes)
 
       call update_unsteady_data(cells, faces, interf, nadv) 
 
@@ -188,6 +197,17 @@ program gems_main
 
    tb = mpi_wtime() - tb
    if(id == 0) print *, ' Total CPU time =', tb, 'Sec'
+
+   call boundary_condition(faces, nodes, cells, interf)
+
+   call update_interface(faces, nodes, cells, interf)
+
+   call cal_node_qv(cells, nodes, faces, interf, bnodes)
+
+   call save_binary(nadv - 1, cells, faces, nodes)
+
+   call output_result(cells,nodes,faces,interf,id,nadv)
+
    call mpi_finalize(ierr)
 
    401 format(a8, i7, a8, e12.4, a8, e12.4) 

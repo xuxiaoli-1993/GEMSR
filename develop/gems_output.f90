@@ -1656,8 +1656,6 @@ contains
       p = p1 * f1 + p2 * f2 + p
    end function insection
 
-
-
    subroutine wall_plot(fn,cells,nodes,faces,interf,it)
       !********************************************************
       implicit none

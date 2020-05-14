@@ -202,7 +202,6 @@ contains
       end do
    end subroutine setup_initial_bc
 
-
    subroutine balance_mass(faces)
       implicit none
       type(face), pointer :: faces(:), cf
@@ -669,7 +668,6 @@ contains
       else
          call outlet_boundary(cf, bc)
       end if
-
    end subroutine farfield_boundary
 
    subroutine wall_boundary(cf, bc, faces, interf)
@@ -793,7 +791,6 @@ contains
       ! EB boundary condition
       it = bc % itype / 1000
       if (neqm > 0) call mhd_boundary(cf, bc, it)
-
    end subroutine wall_boundary
 
    subroutine radiation_boundary(cf, bc)
@@ -835,7 +832,6 @@ contains
 
          end select
       end select
-
    end subroutine radiation_boundary
 
    function viscous_correction(cf, nodes) result(dpdx)
@@ -860,7 +856,6 @@ contains
       tauc = sum(qv % v(imb:ime) * cf % vecn)
 
       dpdx = two * (tauf - tauc)
-
    end function viscous_correction
 
    subroutine geom_boundary(cf, bc, cells)
@@ -881,7 +876,6 @@ contains
          call centerline(cf)
       end select
    end subroutine geom_boundary
-
 
    subroutine symmetry(cf, bc)
       implicit none
@@ -996,7 +990,6 @@ contains
          j = j + 1
          qvr % v(imb + i - 1) = p(j)
       end do
-      !
    end subroutine periodic_correction
 
    subroutine turb_wall_function(cf)
@@ -1049,8 +1042,6 @@ contains
       !
       cf % right_cell % rp = ut
       cf % right_cell % qv = qv
-      !
-
    end subroutine turb_wall_function
 
    subroutine no_wall_function(cf, ks)
@@ -1099,7 +1090,6 @@ contains
       !       qv%v(ike) = k * 0.2_rfp
       !    end if
       !    qv%v(iom) = min(1.e6_rfp, qv%v(iom))
-
    end subroutine no_wall_function
 
    subroutine Reichardt_wall_law(u, un, ut, y, yp, rho, zmu, karman, kinv)
@@ -1129,7 +1119,6 @@ contains
       df = ut * ut * rho / zmu * (one/(one + karman * yp)+ &
          (7.8_rfp/11._rfp)*(eyp11 - (one - 0.33_rfp * yp) * eyp33))
       un = max(u - y * df, zero)
-      !
    end subroutine Reichardt_wall_law
 
    subroutine mhd_boundary(cf, bc, it)
@@ -1313,9 +1302,7 @@ contains
       qvr % v(ife) = zero
       if (it /= 16) qvr % v(ibb:iee) = qvr % v(ibb:iee) * two - qvl % v(ibb:iee)
       cr % jv = cl % jv
-
    end subroutine mhd_boundary
-
 
    function current_vs_time(c)result(c1)
       real(rfp) :: c, c1
@@ -1351,7 +1338,6 @@ contains
       qvr % v(ibb + 1) = zero
       qvr % v(ibe) = btheta
       qvr % v(ieb:iee) = qvl % v(ieb:iee)
-
    end subroutine eb_userdefine
 
    function ojacob(cf)result(a) !vecn,qv,itype)result(a)
@@ -1384,7 +1370,6 @@ contains
       ! EB boundary condition
       it = bc(it) % itype / 1000
       if (neqm > 0.and.neqf > 0) call mhd_jacob(it, cf, a)
-
    end function ojacob
 
    subroutine radiation_jacob(cf, a)
@@ -1421,7 +1406,6 @@ contains
 
          end select
       end select
-
    end subroutine radiation_jacob
 
    subroutine mhd_jacob(it, cf, a)
@@ -1479,7 +1463,6 @@ contains
       case(22)
          call put_diag(a % e, zero, ibb, ibe)
       end select
-
    end subroutine mhd_jacob
 
    subroutine inlet_jacob(cf, a)
@@ -1543,7 +1526,6 @@ contains
             a % e(i, imb:ime) = vel * vd(i - imb + 1)
          end do
       end select
-      !
    end subroutine inlet_jacob
 
    subroutine outlet_jacob(cf, a)
@@ -1648,7 +1630,6 @@ contains
       end select
    end subroutine geom_jacob
 
-
    subroutine symmetry_jacob(cf, a)
       implicit none
       type(face), pointer :: cf
@@ -1734,7 +1715,6 @@ contains
          qvr = qvr + cf % ajl * dqv
       end do
    end subroutine update_boundary
-   !
 
    subroutine update_geom_pinterface(faces, nodes, cells, interf)
       implicit none
@@ -1832,7 +1812,6 @@ contains
             v3(k2) = p(k1)
          end if
       end do
-
    end subroutine xy2rq
    !
    subroutine rq2xy(v1, v2, v3)
@@ -1863,7 +1842,6 @@ contains
             v3(k2) = p(k1)
          end if
       end do
-
    end subroutine rq2xy
 
    subroutine update_pinterface(nodes, cells, faces, interf)
@@ -2154,7 +2132,6 @@ contains
          !    end if
          !
       end do
-      !
    end subroutine interface_bc
 
    subroutine update_interface_dqv(nodes, cells, interf)
@@ -2196,9 +2173,7 @@ contains
          end do
          deallocate(rb, sb)
       end do
-      !  
    end subroutine update_interface_dqv
-
 
    subroutine update_geom_interface(faces, nodes, cells, interf, bnodes)
       implicit none
@@ -2318,7 +2293,6 @@ contains
          cf => faces(i)
          cf % right_cell % srf = one
       end do
-
    end subroutine update_geom_interface
 
    subroutine collect_bnode(faces, cells, nodes, bnodes, interf)
@@ -2410,7 +2384,6 @@ contains
          allocate(bnodes(i) % scell(bnodes(i) % n))
          bnodes(i) % scell = scell(:bnodes(i) % n)
       end do
-
    end subroutine collect_bnode
 
    subroutine update_gradient(nodes, cells, interf)
@@ -2456,8 +2429,5 @@ contains
          end do
          deallocate(rb, sb)
       end do
-      !
-
    end subroutine update_gradient
-
 end module gems_bound
