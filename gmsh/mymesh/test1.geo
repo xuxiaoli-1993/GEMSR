@@ -20,14 +20,11 @@ Curve Loop(1) = {3, 4, 1, 2};
 //+
 Plane Surface(1) = {1};
 //+
-Physical Curve("inlet") = {4};
-//+
-Physical Curve("outlet") = {2};
-//+
-Physical Curve("top_wall") = {3};
-//+
-Physical Curve("bottom_wall") = {1};
-//+
 Characteristic Length {2, 4, 3, 1} = 0.1;
 //+
 Characteristic Length {2, 1, 4, 3} = 0.5;
+
+//+
+Physical Curve("p1") = {4, 2};
+//+
+Physical Curve("p2") = {3, 1};

@@ -44,3 +44,5 @@ Physical Surface("wall4") = {25, 47};
 Physical Surface("outlet") = {26};
 //+
 Physical Surface("inlet") = {48};
+//+
+Transfinite Surface {26};
