@@ -1,0 +1,184 @@
+&geom
+
+! The is the input data for GEMS-DFD code
+  gridfile = "nozzle.su2",   	!the filename of grid generated
+
+  !ifmt = 1  ! ifmt = 2 is default or structured grid(ifmt=1)
+  nd = 2,                  ! the dimension of the problem
+  lenref   = 1.0         ! length scale (x y z)=(x y z)*lenref
+  iaxis = 2
+&end 
+
+&solution
+!*****************************
+! Define solution parameter,e.g. how mang iterations, which algorith, which accuracy, etc..
+
+  irestart = 0,	! 0: first run 1 restart from previous results
+!                   ! code will automatically buckup results to hard disk every 200 iterations
+  nsteps   = 5000, ! specify the number of iterations
+  ivis     = 0,     ! which kind of flow 0:inviscid 1:laminar 2:turbulence
+  init     = 0,     ! indicate how to set initinal condition (0 1 2 3)
+  ipre     = 0,     ! 0 without preconditioning
+!                   1 max vel and viscous vel
+!                   2 max vel and local pressure
+!                   3 max vel
+!                   4 only cell vel
+!                   5 max vel and perturbation pressure
+!                   6 cutoff with vnn 
+  vpre_uns = -1001,
+  imeth    = 1,     ! algorithm 0 explicit 1 Point-Guess 2 LU 3 GMRES 4 CGNS  5 Line-Guess
+  isub     = 5,     ! Number of subiterations for linear solver  
+  ialg     = -1,     !0 first order scheme 1 second order -1 limited second order
+  irec     = 1,     ! 1 least square reconstruction  2. dl's reconstruction
+  iscr=1, !residual output on screen
+  ifile=3,   ! residual output on file
+  ischeme = 0	    ! convective flux discretization scheme
+  iplot    = 4,     ! 0 no plot 1 tecplot 2 fieldview 4 cell-based tecplot
+  nplot = 10
+  cflmin=1
+  cflmax=1
+!CFL:cflmin + (cflmax-cflmin)*it/100; it<100 :cflmax otherwise
+!                             !if cflmin > cflmax cfl = cflmax
+   damping = 100
+  vnn     = 0.01,     ! Von Neumann number
+  errm    =-10.0,     ! Stopping criteria log(sqrt(sum(dQ*dQ)/sum(Q*Q))) < errm
+  pbase   = 1.01e5 !1e5 !114700    ! reference pressure
+  irea    = 0,	! 10 incompressible fluid (water), 0(air)
+  isource = 0
+  iperiodic = 0  !(<3 for cylindar =4 for planar)
+  bodyvel = 0.0, 0.0 
+&end
+
+&unsteady
+!*******************************
+   idt = 0,  ! 0 = steady > 1 unsteady  =1 first order of time deriva 2 second order
+    nt = 10, ! The iterations taken in each real time step of dual step
+ imonit = 10, ! 0 no monitoring 1 output results every each real time to dfd_mon_x.plt
+   dt = 0.001 ! the real time step in second
+&end
+!
+
+&gas_prop
+! Air
+!*******************************
+!Define material properies for vapor mesh (levelset > 0)
+ itype = 0 ! 0: ideal gas, 1: "incompressible gas", 10: user defined
+ rho0=0.0
+ hrefi=0
+ htref=0
+ mwi = 29. !18. !56      ! Molecular weight of each species [g/mol]
+ cpi= 1001. ! Specific heat at constant pressure [J/kg K]
+
+! Sutherland's law
+ tref = 280.0
+ sref = 160.0
+ zmu = -1.78e-5 !-1.14e-3,
+ Pr=0.68 !7.56 ! mu*cp/k
+ !gravity = 0.0, -9.81  ! acceleration of gravity
+&end
+
+&solid_prop
+!*******************************
+!Ti-6Al-4V
+cpl = 831.0, cps = 670.0 ! J/(kg*K) ! specific heat  
+kl = 52.7, ks = 18.7 ! W/(m*K) ! thermal conductivity
+rhol = 3920.0, rhos = 4420.0 ! kg/m^3 ! density
+lheat_melting = 2.86e5, lheat_evaporation = 9.83e6 ! J/kg ! latent heat
+tl = 1923.0 , ts = 1877.0 ! K ! liquidus and solidus temperature
+mul = 0.03 ! Pa*s (N/m^2*s) ! dynamic viscosity
+k0 = 1.e-10 		
+beta = 1.96e-5 ! K^-1 ! thermal expansion coefficient
+sigmat = -2.8e-4 ! N/(m*K) ! Marangoni coefficient       
+alpha = 0.4 ! Normal absorptivity
+n = 3.47 ! refractive index
+k = 4.01 ! extinction coefficient
+Mw = 47.867 ! g/mol ! molecular weight
+pb = 1.01e5 ! Pa ! reference boiling pressure 
+Tb = 3533 ! K ! reference boiling temperature
+emi = 0.4 ! emissivity
+gv = 0.0,-9.8 ! gravity vector
+Darcy_on = 1
+Gravity_on = 1
+Thermal_Buoyancy_on = 1
+Enthalpy_Correction_on = 1
+&end
+
+&turb
+!*******************************
+! These parameters used to decide the turbulence conditions in inlet for boundary layer flow (Menter)
+! omega = lamda*U/L, mut=Cmu * ulaminar, k=mut * omega / rho
+!Free-shear layers more sensitive to small freestream value of omega and larger values of omega are
+!needed in the freestream. lamda=40 for mixing layer, increasing to lamda=80 for round jets.
+!
+  lamda = 10.0, cmu = 1.0e-1,ksplus = .1   ! the dimensionless roughness, < 5 is smooth surface
+&end
+
+&number_of_boundary
+!********************************
+ n_in  = 1,     ! number of inlet boundary patches
+ n_out = 1,     ! number of outlet boundary patches
+ n_far = 0,     ! number of farfield (i.e. inlet/outlet) boundary patches
+ n_wall = 1,     ! number of wall boundary patches
+ n_geom = 1,     ! number of geometric boundary patches
+ n_vol  = 0     ! number of volume conditions
+!
+&end
+!
+&inlet
+   label = 3,
+   itype = 10, ! supersonic
+   p = 3697972.5,
+   T = 3000.,
+   u = 1097.313
+&end
+
+&outlet
+!-----------
+   label = 1, itype = 0,  !-- fully developed
+   pback = 1848986.25
+&end
+
+&wall
+  label = 4,
+  itype = 3, 
+  wtemp = 300.
+  wvel = 0.0,0.0
+  qw = 0.0
+&end
+!
+&geom_type
+  label = 2,
+  itype = 0   ! --- symmetric
+&end
+
+!
+&initial_condition
+!------------------
+islast = 1
+t=3000. !1500, !2000,     ! pressure and temperature
+p = 1848986.25
+u=0.0
+&end
+
+&output_vars
+Perturbation_Pressure=1,
+Temperature = 1,
+Velx=1,
+Vely=1,
+!Velz=1,
+!Static_Pressure=1,
+!Enthalpy=1,
+Density=1,
+Mach_Number=1,
+!Entropy=1,
+!Viscosity=1,
+!Thermo_Conductivity=1,
+!Vorticity=1,
+nwplot=0 !whether to plot boundary and partition face
+&end
+
+&debug
+pretime = 0
+xc = 0.4
+yc = 0.005
+&end
